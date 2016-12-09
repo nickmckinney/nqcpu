@@ -1,5 +1,44 @@
 module decoder (
+	input [15:0] instr,
+	
+	output [3:0] aluOp,
+	output [2:0] aluReg1,
+	output [2:0] aluReg2,
+	output [1:0] aluOpSource1,		// ALU first operand: 0 = reg, 1 = memory read, 2 = imm8, 3 = PC
+	output [1:0] aluOpSource2,		// ALU second operand: 0 = reg, 1 = ~reg, 2 = PC, 3 = ???
+	output aluDest,					// 0 = reg, 1 = PC
+
+	output [2:0] regDest,
+	output regSetH,
+	output regSetL,
+	
+	output [2:0] regAddr,
+	output memReadB,
+	output memReadW,
+	output memWriteB,
+	output memWriteW,
+	
+	output [4:0] setRegCond,   // {should set when condition is true, Z doesn't matter, S doesn't matter, Z must be this, S must be this}
+	
+	output [15:0] imm
 );
+
+	localparam [3:0] ALU_ADD = 4'h0;
+	localparam [3:0] ALU_SUB = 4'h1;
+	localparam [3:0] ALU_MULT = 4'h2;
+	localparam [3:0] ALU_DIV = 4'h3;
+	localparam [3:0] ALU_AND = 4'h4;
+	localparam [3:0] ALU_OR = 4'h5;
+	localparam [3:0] ALU_XOR = 4'h6;
+	localparam [3:0] ALU_JUSTX = 4'h7;
+	localparam [3:0] ALU_SHL_ZE = 4'h8;  // zero extend
+	localparam [3:0] ALU_SHL_OE = 4'h9;  // one extend
+	localparam [3:0] ALU_SHL_SE = 4'hA;  // sign (last bit) extend
+	localparam [3:0] ALU_SHL_BE = 4'hB;  // barrel shift
+	localparam [3:0] ALU_SHR_ZE = 4'hC;
+	localparam [3:0] ALU_SHR_OE = 4'hD;
+	localparam [3:0] ALU_SHR_SE = 4'hE;
+	localparam [3:0] ALU_SHR_BE = 4'hF;
 
 // instructions
 //  add (reg0 <- reg1 + reg2)
@@ -11,9 +50,9 @@ module decoder (
 //  and (reg0 <- reg1 & reg2)
 //  or  (reg0 <- reg1 | reg2)
 //  xor (reg0 <- reg1 ^ reg2)
-//  not (reg0 <- !reg1)
-//  neg (reg0 <- -reg1)  <-- could maybe be another mode of not instruction where it also adds 1.
-//  bts (reg1th bit of reg0 moved to "zero" status bit, reg1th bit of reg0 is set or reset)
+//  not (reg0 <- ~reg2)
+//  neg (reg0 <- -reg2)
+//  bts (reg2 <- reg0, reg0 <- (reg0 | reg1 (if setting) OR reg0 & ~reg1 (if resetting)))
 //  mov (reg0 <- reg1, *reg0 <- reg1, reg0 <- *reg1, imm8 -> reg0H, imm8 -> reg0L)
 //  b** (relative branch: ne, eq, gt, lt, ge, le, always)
 //  jmp (absolute branch)
@@ -33,6 +72,7 @@ module decoder (
 //         1 10 xor
 //         1 11 ???
 
+
 // shl/slr
 //  0001 + [reg0] + [dir] + [reg1] + [reg2] + [extend]
 //    dir:     0 = left, 1 = right
@@ -42,36 +82,149 @@ module decoder (
 //             11 barrel shift
 
 // not/neg
-//  0010 + [reg0] + [which] + [reg1] + 000 + 00
+//  0010 + [reg0] + [which] + 000 + [reg2] + 00
 //    which:   0 = not, 1 = neg
 
-// bts
+// bts -- NOT IMPLEMENTED YET
 //  0011 + [reg0] + [set or reset] + [reg1] + 00000
 //    set or reset: 0 = reset, 1 = set
 
 // mov
-//  reg0 <- reg1:   0100 + [reg0] + 0 + [reg1] + [dest byte] + [src byte] + [byte or word] + 00
-//  *reg0 <- reg1:  0100 + [reg0] + 1 + [reg1] + 0 + [src byte] + [byte or word] + 0 + 0
+//  reg0 <- reg1:   0100 + [reg0] + 0 + [reg1] + 0 + 0 + 1 + 00
+
+
+// mov
+//  *reg0 <- reg1:  0100 + [reg0] + 1 + [reg1] + 0 + 0 + [byte or word] + 0 + 0
 //  reg0 <- *reg1:  0100 + [reg0] + 1 + [reg1] + [dest byte] + 0 + [byte or word] + 0 + 1
-//  reg0L <- imm8:  0101 + [reg0] + 0 + [immediate value]
-//  reg0H <- imm8:  0101 + [reg0] + 1 + [immediate value]
-//    byte or word: 0 = word, 1 = byte
+//    byte or word: 0 = byte, 1 = word
 //                     for mem operations, word ops must be word-aligned (lsb must be 0)
-//    src/dest byte: 0 = low byte, 1 = high byte (ignored for word operations)
+//    dest byte: 0 = low byte, 1 = high byte (ignored for word operations)
+
+
+// mov
+//  reg0L <- imm8:  0101 + [reg0] + [high or low] + [immediate value]
+
 
 // b**
 //  0110 + [which] + 0 + [immediate offset]
-//    which:  000 eq
-//            001 ne
-//            010 gt
-//            011 ge
-//            100 lt
-//            101 le
+//    which:  000 eq   (Z = 1, S = x)
+//            001 ne   (Z = 0, S = x)
+//            010 gt   (Z = 0, S = 0)
+//            011 ge   (Z = x, S = 0)
+//            100 lt   (Z = 0, S = 1)
+//            101 le   (Z = x, S = 1)
 //            110 ??
-//            111 always
+//            111 always  (Z = x, S = x)
 
 // jmp
-//  0111 + [reg0] + 0 + 00000000
-//    basically moves reg0 to pc
+//  0111 + 00000 + [reg1] + 00000
+//    basically moves reg1 to pc
+
+	// instruction decode
+	wire [3:0] which_instr = instr[15:12];
+	wire instr_math, instr_shift, instr_notneg, instr_bts, instr_mov, instr_movimm, instr_branch, instr_jmp, instr_nop;
+	assign {instr_math, instr_shift, instr_notneg, instr_bts, instr_mov, instr_movimm, instr_branch, instr_jmp, instr_nop} =
+		which_instr == 4'h0 ? 9'b100000000 :
+		which_instr == 4'h1 ? 9'b010000000 :
+		which_instr == 4'h2 ? 9'b001000000 :
+		which_instr == 4'h3 ? 9'b000100000 :
+		which_instr == 4'h4 ? 9'b000010000 :
+		which_instr == 4'h5 ? 9'b000001000 :
+		which_instr == 4'h6 ? 9'b000000100 :
+		which_instr == 4'h7 ? 9'b000000010 : 9'b000000001;
+
+	// src/dest registers
+	wire [2:0] reg0 = instr[11:9];
+	wire [2:0] reg1 = instr[7:5];
+	wire [2:0] reg2 = instr[4:2];
+
+	// for instr_math
+	wire [2:0] math_op = {instr[8], instr[1:0]};
+
+	// for instr_shift
+	wire shift_dir = instr[8];
+	wire [1:0] shift_extend = instr[1:0];
+
+	// for instr_notneg
+	wire notneg_is_neg = instr[8];
+
+	// for instr_mov
+	wire mov_dest_byte_high = instr[4];
+	wire mov_word = instr[2];
+	wire mov_mem = instr[8];
+	wire mov_mem_read = instr[0];
+
+	// for instr_movimm
+	wire movimm_high = instr[8];
+	wire [7:0] movimm_imm = instr[7:0];
+
+	// for instr_branch
+	wire [2:0] branch_cond = instr[11:9];
+	wire [7:0] branch_offset = instr[7:0];
+	wire [4:0] branch_set_cond =
+		branch_cond == 3'h0 ? 5'b10110 :		// EQ
+		branch_cond == 3'h1 ? 5'b10100 :		// NE
+		branch_cond == 3'h2 ? 5'b10000 :		// GT
+		branch_cond == 3'h3 ? 5'b11000 :		// GE
+		branch_cond == 3'h4 ? 5'b10001 :		// LT
+		branch_cond == 3'h5 ? 5'b11001 :		// LE
+			5'b11100;
+
+	assign aluOp =
+		instr_math ? {1'b0, math_op} :
+		instr_shift ? {1'b1, shift_dir, shift_extend} :
+		instr_notneg ? ALU_ADD :
+		instr_mov ? ALU_JUSTX :
+		instr_movimm ? ALU_JUSTX :
+			ALU_ADD;
+
+	assign aluReg1 = reg1;
+	assign aluReg2 = reg2;
+
+	assign aluOpSource1 =
+		instr_mov ? ((mov_mem & mov_mem_read) ? 2'h1 : 2'h0) :
+		instr_notneg ? 2'h2 :
+		instr_movimm ? 2'h2 :
+		instr_branch ? 2'h2 :
+			2'h0;
+
+	assign aluOpSource2 =
+		instr_notneg ? 2'h1 :
+		instr_branch ? 2'h2 :
+			2'h0;
+
+	assign aluDest =
+		instr_branch ? 1'b1 :
+		instr_jmp ? 1'b1 :
+			1'b0;
+
+	assign regDest = reg0;
+	
+	assign regSetH =
+		instr_mov ? (mov_word | mov_dest_byte_high) :
+		instr_movimm ? movimm_high :
+			1'b1;
+
+	assign regSetL =
+		instr_mov ? (mov_word | !mov_dest_byte_high) :
+		instr_movimm ? !movimm_high :
+			1'b1;
+
+	assign regAddr = mov_mem_read ? reg1 : reg0;  // for all other instructions, this is a don't-care
+	assign memReadB = instr_mov ? (mov_mem & (mov_mem_read & !mov_word)) : 1'b0;
+	assign memReadW = instr_mov ? (mov_mem & (mov_mem_read & mov_word)) : 1'b0;
+	assign memWriteB = instr_mov ? (mov_mem & (!mov_mem_read & !mov_word)) : 1'b0;
+	assign memWriteW = instr_mov ? (mov_mem & (!mov_mem_read & mov_word)) : 1'b0;
+	
+	assign setRegCond =
+		instr_mov ? ((!mov_mem | mov_mem_read) ? 5'b11100 : 5'b00000) :
+		instr_branch ? branch_set_cond :
+		instr_nop ? 5'b00000 :
+			5'b11100;
+
+	assign imm =
+		instr_notneg ? {15'b0, notneg_is_neg} :
+		instr_branch ? {8'b0, branch_offset} :
+			{movimm_imm, movimm_imm};
 
 endmodule

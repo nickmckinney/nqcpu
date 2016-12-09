@@ -15,7 +15,7 @@ module alu (
 //  0100: result = x & y
 //  0101: result = x | y
 //  0110: result = x ^ y
-//  0111: result = don't care
+//  0111: result = x
 //  1000: result = x << y (zero extend)
 //  1001: result = x << y (one extend)
 //  1010: result = x << y (extend with last bit)
@@ -58,6 +58,7 @@ module alu (
 		op == 4'b0100 ? anded :
 		op == 4'b0101 ? ored :
 		op == 4'b0110 ? xored :
+		op == 4'b0111 ? x :
 		shifted;
 	
 	assign zero = ~(|result);
