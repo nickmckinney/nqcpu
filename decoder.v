@@ -42,6 +42,7 @@ module decoder (
 
 // instructions
 //  add (reg0 <- reg1 + reg2)
+//  addpc (reg0 <- PC + imm8)
 //  sub (reg0 <- reg1 - reg2)
 //  mul (reg0 <- reg1 * reg2)
 //  div (reg0 <- reg1 / reg2)
@@ -72,6 +73,9 @@ module decoder (
 //         1 10 xor
 //         1 11 ???
 
+// addpc
+//  1000 + [reg0] + 0 + [imm]
+//  adds the immediate value (signed) to the current value of PC and puts the result in reg0
 
 // shl/slr
 //  0001 + [reg0] + [dir] + [reg1] + [reg2] + [extend]
@@ -120,23 +124,30 @@ module decoder (
 //  0111 + 00000 + [reg1] + 00000
 //    basically moves reg1 to pc
 
+// nop
+//  1111 + xxxx xxxx xxxx
+
 	// instruction decode
 	wire [3:0] which_instr = instr[15:12];
-	wire instr_math, instr_shift, instr_notneg, instr_bts, instr_mov, instr_movimm, instr_branch, instr_jmp, instr_nop;
-	assign {instr_math, instr_shift, instr_notneg, instr_bts, instr_mov, instr_movimm, instr_branch, instr_jmp, instr_nop} =
-		which_instr == 4'h0 ? 9'b100000000 :
-		which_instr == 4'h1 ? 9'b010000000 :
-		which_instr == 4'h2 ? 9'b001000000 :
-		which_instr == 4'h3 ? 9'b000100000 :
-		which_instr == 4'h4 ? 9'b000010000 :
-		which_instr == 4'h5 ? 9'b000001000 :
-		which_instr == 4'h6 ? 9'b000000100 :
-		which_instr == 4'h7 ? 9'b000000010 : 9'b000000001;
+	wire instr_math, instr_shift, instr_notneg, instr_bts, instr_mov, instr_movimm, instr_branch, instr_jmp, instr_addpc, instr_nop;
+	assign {instr_math, instr_shift, instr_notneg, instr_bts, instr_mov, instr_movimm, instr_branch, instr_jmp, instr_addpc, instr_nop} =
+		which_instr == 4'h0 ? 10'b1000000000 :
+		which_instr == 4'h1 ? 10'b0100000000 :
+		which_instr == 4'h2 ? 10'b0010000000 :
+		which_instr == 4'h3 ? 10'b0001000000 :
+		which_instr == 4'h4 ? 10'b0000100000 :
+		which_instr == 4'h5 ? 10'b0000010000 :
+		which_instr == 4'h6 ? 10'b0000001000 :
+		which_instr == 4'h7 ? 10'b0000000100 : 
+		which_instr == 4'h8 ? 10'b0000000010 : 10'b0000000001;
 
 	// src/dest registers
 	wire [2:0] reg0 = instr[11:9];
 	wire [2:0] reg1 = instr[7:5];
 	wire [2:0] reg2 = instr[4:2];
+	
+	wire [7:0] imm_param = instr[7:0];
+	wire [15:0] ext_imm_param = {{8{instr[7]}}, instr[7:0]};  // sign-extended immediate parameter
 
 	// for instr_math
 	wire [2:0] math_op = {instr[8], instr[1:0]};
@@ -156,7 +167,7 @@ module decoder (
 
 	// for instr_movimm
 	wire movimm_high = instr[8];
-	wire [7:0] movimm_imm = instr[7:0];
+	wire [7:0] movimm_imm = imm_param;
 
 	// for instr_branch
 	wire [2:0] branch_cond = instr[11:9];
@@ -224,7 +235,8 @@ module decoder (
 
 	assign imm =
 		instr_notneg ? {15'b0, notneg_is_neg} :
-		instr_branch ? {8'b0, branch_offset} :
+		instr_branch ? ext_imm_param :
+		instr_addpc ? ext_imm_param :
 			{movimm_imm, movimm_imm};
 
 endmodule

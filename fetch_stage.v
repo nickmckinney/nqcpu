@@ -5,7 +5,8 @@ module fetch_stage (
 	
 	input [15:0] addr_in,
 	
-	output reg [15:0] instr_out
+	output reg [15:0] instr_out,
+	output reg [15:0] pc_out
 );
 
 	always @(posedge clk) begin
@@ -23,8 +24,10 @@ module fetch_stage (
 				15'h6: instr_out <= 16'b0100_000_0_011_00100;	// mov r0,r3
 				15'h7: instr_out <= 16'b0000_100_1_100_100_10;	// xor r4,r4,r4
 				15'h8: instr_out <= 16'b0111_00000_100_00000;	// jmp r4
-				default: instr_out <= 16'b1000_000000000000;		// nop
+				default: instr_out <= 16'b1111_000000000000;		// nop
 			endcase
+			
+			pc_out <= addr_in;
 		end
 		else begin
 			ready <= 1'b0;

@@ -8,10 +8,19 @@ module regFile (
 	input hb,
 	input lb,
 	output [15:0] dataA,
-	output [15:0] dataB
+	output [15:0] dataB,
+	
+	output [15:0] dbg_r0,
+	output [15:0] dbg_r1,
+	output [15:0] dbg_r2,
+	output [15:0] dbg_r3,
+	output [15:0] dbg_r4,
+	output [15:0] dbg_r5,
+	output [15:0] dbg_r6,
+	output [15:0] dbg_r7
 );
 
-	reg [15:0] register[7];
+	reg [15:0] register[8];
 	
 	assign dataA = register[regA];
 	assign dataB = register[regB];
@@ -24,4 +33,13 @@ module regFile (
 			};
 		end
 	end
+	
+	assign dbg_r0 = register[0];
+	assign dbg_r1 = register[1];
+	assign dbg_r2 = register[2];
+	assign dbg_r3 = register[3];
+	assign dbg_r4 = register[4];
+	assign dbg_r5 = register[5];
+	assign dbg_r6 = register[6];
+	assign dbg_r7 = register[7];
 endmodule
