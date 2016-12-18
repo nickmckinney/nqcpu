@@ -28,7 +28,8 @@ module nqcpu (
 	output [15:0] dbg_r4,
 	output [15:0] dbg_r5,
 	output [15:0] dbg_r6,
-	output [15:0] dbg_r7
+	output [15:0] dbg_r7,
+	output [9:0] dbg_state
 );
 
 	reg [15:0] pc;
@@ -37,12 +38,14 @@ module nqcpu (
 		pc = 16'h0;
 	end
 
+	wire fetch_en, decode_en, alu_en, incr_pc;
+
 	wire fetch_ready;
 	wire [15:0] fetched_instr;
 	wire [15:0] pc_from_fetch;
 	fetch_stage fetch_inst (
 		.clk(clk),
-		.en(1'b1),
+		.en(fetch_en),
 		.addr_in(pc),
 		.ready(fetch_ready),
 		.instr_out(fetched_instr),
@@ -50,7 +53,7 @@ module nqcpu (
 	);
 
 	always @(posedge clk) begin
-		if(fetch_ready) begin
+		if(incr_pc) begin
 			pc <= pc + 16'h2;
 		end
 	end
@@ -61,7 +64,7 @@ module nqcpu (
 
 	decoder_stage decoder_inst (
 		.clk(clk),
-		.en(fetch_ready),
+		.en(decode_en),
 		.instr_in(fetched_instr),
 		.pc_in(pc_from_fetch),
 		.control_signals_out(ctrl_from_decoder),
@@ -105,7 +108,7 @@ module nqcpu (
 	wire [15:0] pc_from_alu;
 	alu_stage alu_inst (
 		.clk(clk),
-		.en(1'b1),
+		.en(alu_en),
 		.pc_in(pc_from_decoder),
 		.control_signals_in(ctrl_from_decoder),
 		.imm_in(imm_from_decoder),
@@ -128,6 +131,20 @@ module nqcpu (
 		.control_signals_out(ctrl_from_alu),
 		.imm_out(imm_from_alu),
 		.pc_out(pc_from_alu)
+	);
+
+	control_unit control_unit_inst (
+		.clk(clk),
+		
+		.fetch_ready(fetch_ready),
+		
+		.fetch_en(fetch_en),
+		.decode_en(decode_en),
+		.alu_en(alu_en),
+		
+		.incr_pc(incr_pc),
+		
+		.dbg_state(dbg_state)
 	);
 
 	ctrl_decode debug_decode (
