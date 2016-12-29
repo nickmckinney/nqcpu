@@ -150,7 +150,7 @@ module nqcpu (
 	control_unit control_unit_inst (
 		.clk(clk),
 		
-		.fetch_ready(fetch_ready),
+		.needWait(fetch_en & !fetch_ready),
 		
 		.fetch_en(fetch_en),
 		.decode_en(decode_en),

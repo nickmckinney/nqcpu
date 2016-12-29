@@ -1,7 +1,7 @@
 module control_unit (
 	input clk,
 	
-	input fetch_ready,
+	input needWait,
 	
 	output fetch_en,
 	output decode_en,
@@ -25,11 +25,13 @@ module control_unit (
 	assign incr_pc = current_state[1];
 	
 	always @(posedge clk) begin
-		case(current_state)
-			10'b1: if(fetch_ready) current_state <= 10'b10;
-			10'b10: current_state <= 10'b100;
-			10'b100: current_state <= 10'b1;
-		endcase
+		if(!needWait) begin
+			case(current_state)
+				10'b1: current_state <= 10'b10;
+				10'b10: current_state <= 10'b100;
+				10'b100: current_state <= 10'b1;
+			endcase
+		end
 	end
 	
 	assign dbg_state = current_state;
