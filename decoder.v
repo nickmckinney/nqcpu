@@ -58,6 +58,11 @@ module decoder (
 //  b** (relative branch: ne, eq, gt, lt, ge, le, always)
 //  jmp (absolute branch)
 
+// WISH LIST:
+//  inc/dec for adding 1 and -1 in one instruction
+//  cmp, which is sub without actually storing the result
+//  cmpi, which is cmp with a sign-extended immediate argument
+
 // 8 registers, 3 bits per register argument
 // 4 bits for instruction
 // instr with 3 reg params is 13 bits
