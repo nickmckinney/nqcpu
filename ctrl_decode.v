@@ -1,5 +1,5 @@
 module ctrl_decode (
-	input [31:0] control_signals,
+	input [32:0] control_signals,
 
 	output [3:0] aluOp,
 	output [2:0] aluReg1,
@@ -18,7 +18,7 @@ module ctrl_decode (
 	output memWriteB,
 	output memWriteW,
 
-	output [4:0] setRegCond   // {should set when condition is true, Z doesn't matter, S doesn't matter, Z must be this, S must be this}
+	output [5:0] setRegCond   // {should set when condition is true, Z doesn't matter, S doesn't matter, Z must be this, S must be this}
 );
 
 	assign {

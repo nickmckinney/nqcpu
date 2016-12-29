@@ -16,9 +16,9 @@ module ctrl_encode (
 	input memWriteB,
 	input memWriteW,
 
-	input [4:0] setRegCond,   // {should set when condition is true, Z doesn't matter, S doesn't matter, Z must be this, S must be this}
+	input [5:0] setRegCond,   // {should set when condition is true, Z doesn't matter, S doesn't matter, Z must be this, S must be this}
 
-	output [31:0] control_signals
+	output [32:0] control_signals
 );
 
 	assign control_signals = {

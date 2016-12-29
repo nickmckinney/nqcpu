@@ -5,7 +5,7 @@ module decoder_stage (
 	input [15:0] instr_in,
 	input [15:0] pc_in,
 	
-	output reg [31:0] control_signals_out,
+	output reg [32:0] control_signals_out,
 	output reg [15:0] imm_out,
 	output reg [15:0] pc_out
 );
@@ -24,7 +24,7 @@ module decoder_stage (
 	wire memReadW_next;
 	wire memWriteB_next;
 	wire memWriteW_next;
-	wire [4:0] setRegCond_next;
+	wire [5:0] setRegCond_next;
 	wire [15:0] imm_next;
 
 	decoder decoder_inst (
@@ -47,7 +47,7 @@ module decoder_stage (
 		.imm(imm_next)
 	);
 	
-	wire [31:0] control_signals_next;
+	wire [32:0] control_signals_next;
 	
 	ctrl_encode encode_inst (
 		.aluOp(aluOp_next),

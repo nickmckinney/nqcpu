@@ -19,7 +19,7 @@ module nqcpu (
 	output debugMemWriteB,
 	output debugMemWriteW,
 
-	output [4:0] debugSetRegCond,   // {should set when condition is true, Z doesn't matter, S doesn't matter, Z must be this, S must be this}
+	output [5:0] debugSetRegCond,   // {should set when condition is true, Z doesn't matter, S doesn't matter, Z must be this, S must be this}
 	
 	output [15:0] dbg_r0,
 	output [15:0] dbg_r1,
@@ -58,7 +58,7 @@ module nqcpu (
 		end
 	end
 
-	wire [31:0] ctrl_from_decoder;
+	wire [32:0] ctrl_from_decoder;
 	wire [15:0] imm_from_decoder;
 	wire [15:0] pc_from_decoder;
 
@@ -103,7 +103,7 @@ module nqcpu (
 		.dbg_r7(dbg_r7)
 	);
 
-	wire [31:0] ctrl_from_alu;
+	wire [32:0] ctrl_from_alu;
 	wire [15:0] imm_from_alu;
 	wire [15:0] pc_from_alu;
 	alu_stage alu_inst (

@@ -18,7 +18,7 @@ module decoder (
 	output memWriteB,
 	output memWriteW,
 	
-	output [4:0] setRegCond,   // {should set when condition is true, Z doesn't matter, S doesn't matter, Z must be this, S must be this}
+	output [5:0] setRegCond,   // {should set when condition is true, Z condition, combiner, C condition}, condition = (00: must be 0, 01: must be 1, 1x: don't care)
 	
 	output [15:0] imm
 );
@@ -111,14 +111,14 @@ module decoder (
 
 // b**
 //  0110 + [which] + 0 + [immediate offset]
-//    which:  000 eq   (Z = 1, S = x)
-//            001 ne   (Z = 0, S = x)
-//            010 gt   (Z = 0, S = 0)
-//            011 ge   (Z = x, S = 0)
-//            100 lt   (Z = 0, S = 1)
-//            101 le   (Z = x, S = 1)
+//    which:  000 eq   (Z = 1 and C = 0)
+//            001 ne   (Z = 0 and C = x)
+//            010 gt   (Z = 0 and C = 0)
+//            011 ge   (Z = 1 or C = 0)
+//            100 lt   (Z = 0 and C = 1)
+//            101 le   (Z = 1 or C = 1)
 //            110 ??
-//            111 always  (Z = x, S = x)
+//            111 always  (Z = x, C = x)
 
 // jmp
 //  0111 + 00000 + [reg1] + 00000
@@ -172,14 +172,14 @@ module decoder (
 	// for instr_branch
 	wire [2:0] branch_cond = instr[11:9];
 	wire [7:0] branch_offset = instr[7:0];
-	wire [4:0] branch_set_cond =
-		branch_cond == 3'h0 ? 5'b10110 :		// EQ
-		branch_cond == 3'h1 ? 5'b10100 :		// NE
-		branch_cond == 3'h2 ? 5'b10000 :		// GT
-		branch_cond == 3'h3 ? 5'b11000 :		// GE
-		branch_cond == 3'h4 ? 5'b10001 :		// LT
-		branch_cond == 3'h5 ? 5'b11001 :		// LE
-			5'b11100;
+	wire [5:0] branch_set_cond =
+		branch_cond == 3'h0 ? 6'b1_01_1_00 :		// EQ
+		branch_cond == 3'h1 ? 6'b1_00_1_10 :		// NE
+		branch_cond == 3'h2 ? 6'b1_00_1_00 :		// GT
+		branch_cond == 3'h3 ? 6'b1_01_0_00 :		// GE
+		branch_cond == 3'h4 ? 6'b1_00_1_01 :		// LT
+		branch_cond == 3'h5 ? 6'b1_01_0_01 :		// LE
+			6'b1_10_0_10;
 
 	assign aluOp =
 		instr_math ? {1'b0, math_op} :
@@ -228,10 +228,10 @@ module decoder (
 	assign memWriteW = instr_mov ? (mov_mem & (!mov_mem_read & mov_word)) : 1'b0;
 	
 	assign setRegCond =
-		instr_mov ? ((!mov_mem | mov_mem_read) ? 5'b11100 : 5'b00000) :
+		instr_mov ? ((!mov_mem | mov_mem_read) ? 6'b1_10_0_10 : 6'b000000) :
 		instr_branch ? branch_set_cond :
-		instr_nop ? 5'b00000 :
-			5'b11100;
+		instr_nop ? 6'b000000 :
+			6'b1_10_0_10;
 
 	assign imm =
 		instr_notneg ? {15'b0, notneg_is_neg} :

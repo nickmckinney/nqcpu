@@ -2,7 +2,7 @@ module alu_stage (
 	input clk,
 	input en,
 	input [15:0] pc_in,
-	input [31:0] control_signals_in,
+	input [32:0] control_signals_in,
 	input [15:0] imm_in,
 
 	// register file
@@ -20,7 +20,7 @@ module alu_stage (
 	input [15:0] memData_in,    // read in from memory
 	output reg [15:0] memData_out,  // to write out to memory
 	
-	output reg [31:0] control_signals_out,
+	output reg [32:0] control_signals_out,
 	output reg [15:0] imm_out,
 	output reg [15:0] pc_out
 );
@@ -40,7 +40,7 @@ module alu_stage (
 	wire memReadW_in;
 	wire memWriteB_in;
 	wire memWriteW_in;
-	wire [4:0] setRegCond_in;
+	wire [5:0] setRegCond_in;
 
 	ctrl_decode ctrl_decode_inst (
 		.control_signals(control_signals_in),
