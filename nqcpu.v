@@ -162,7 +162,7 @@ module nqcpu (
 	);
 
 	ctrl_decode debug_decode (
-		.control_signals(ctrl_from_alu),
+		.control_signals(ctrl_from_decoder),
 
 		.aluOp(debugAluOp),
 		.aluReg1(debugAluReg1),
