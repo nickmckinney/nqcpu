@@ -20,6 +20,10 @@ module alu_stage (
 	input [15:0] memData_in,    // read in from memory
 	output reg [15:0] memData_out,  // to write out to memory
 	
+	// setting PC
+	output setPC,
+	output [15:0] setPCValue,
+	
 	output reg [32:0] control_signals_out,
 	output reg [15:0] imm_out,
 	output reg [15:0] pc_out,
@@ -90,14 +94,29 @@ module alu_stage (
 		.carry(aluCarry)
 	);
 	
+	wire setRegZCond, setRegCCond, setSomeReg;
+	assign setRegZCond = setRegCond_in[4] | (setRegCond_in[3] == statusReg[1]);
+	assign setRegCCond = setRegCond_in[1] | (setRegCond_in[0] == statusReg[0]);
+	assign setSomeReg =
+		en &
+		setRegCond_in[5] &
+		(
+			setRegCond_in[2] ?
+				(setRegZCond & setRegCCond) :
+				(setRegZCond | setRegCCond)
+		);
+
 	assign rf_regA = aluReg1_in;
 	assign rf_regB = aluReg2_in;
-	assign rf_we = en & (regSetH_in | regSetL_in);
+	assign rf_we = setSomeReg & !aluDest_in;
 	assign rf_hb = regSetH_in;
 	assign rf_lb = regSetL_in;
 	assign rf_dataIn = aluResult;
 	assign rf_regDest = regDest_in;
 
+	assign setPC = setSomeReg & aluDest_in;
+	assign setPCValue = aluResult;
+	
 	always @(posedge clk) begin
 		if(en) begin
 			control_signals_out <= control_signals_in;

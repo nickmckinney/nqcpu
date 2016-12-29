@@ -31,6 +31,9 @@ module nqcpu (
 	output [15:0] dbg_r7,
 	output [9:0] dbg_state,
 	
+	output dbg_setPC,
+	output [15:0] dbg_setPCValue,
+	
 	output [1:0] dbg_statusreg
 );
 
@@ -40,7 +43,8 @@ module nqcpu (
 		pc = 16'h0;
 	end
 
-	wire fetch_en, decode_en, alu_en, incr_pc;
+	wire fetch_en, decode_en, alu_en, incr_pc, setPC;
+	wire [15:0] setPCValue;
 
 	wire fetch_ready;
 	wire [15:0] fetched_instr;
@@ -57,6 +61,9 @@ module nqcpu (
 	always @(posedge clk) begin
 		if(incr_pc) begin
 			pc <= pc + 16'h2;
+		end
+		else if (setPC & alu_en) begin
+			pc <= setPCValue;
 		end
 	end
 
@@ -130,6 +137,9 @@ module nqcpu (
 		.memData_in(16'hDEAD),    // read in from memory
 		//.memData_out(??),  // to write out to memory
 		
+		.setPC(setPC),
+		.setPCValue(setPCValue),
+
 		.control_signals_out(ctrl_from_alu),
 		.imm_out(imm_from_alu),
 		.pc_out(pc_from_alu),
@@ -174,6 +184,7 @@ module nqcpu (
 		.setRegCond(debugSetRegCond)
 	);
 	
-	assign debugPC = pc_from_alu;
-
+	assign debugPC = pc;
+	assign dbg_setPC = setPC;
+	assign dbg_setPCValue = setPCValue;
 endmodule
