@@ -25,6 +25,17 @@ module regFile (
 	assign dataA = register[regA];
 	assign dataB = register[regB];
 	
+	initial begin
+		register[0] = 16'h0;
+		register[1] = 16'h0;
+		register[2] = 16'h0;
+		register[3] = 16'h0;
+		register[4] = 16'h0;
+		register[5] = 16'h0;
+		register[6] = 16'h0;
+		register[7] = 16'h0;
+	end
+	
 	always @(posedge clk) begin
 		if(we) begin
 			register[regDest] <= {
