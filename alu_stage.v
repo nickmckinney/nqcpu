@@ -22,8 +22,11 @@ module alu_stage (
 	
 	output reg [32:0] control_signals_out,
 	output reg [15:0] imm_out,
-	output reg [15:0] pc_out
+	output reg [15:0] pc_out,
+
+	output [1:0] dbg_statusreg
 );
+	reg [1:0] statusReg;
 
 	// decode signals
 	wire [3:0] aluOp_in;
@@ -101,7 +104,10 @@ module alu_stage (
 			imm_out <= imm_in;
 			memData_out <= aluResult;
 			pc_out <= pc_in;
+			statusReg <= {aluZero, aluCarry};  // not quite right; should only happen for a few instructions
 		end
 	end
+	
+	assign dbg_statusreg = statusReg;
 
 endmodule

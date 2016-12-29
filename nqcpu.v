@@ -29,7 +29,9 @@ module nqcpu (
 	output [15:0] dbg_r5,
 	output [15:0] dbg_r6,
 	output [15:0] dbg_r7,
-	output [9:0] dbg_state
+	output [9:0] dbg_state,
+	
+	output [1:0] dbg_statusreg
 );
 
 	reg [15:0] pc;
@@ -130,7 +132,9 @@ module nqcpu (
 		
 		.control_signals_out(ctrl_from_alu),
 		.imm_out(imm_from_alu),
-		.pc_out(pc_from_alu)
+		.pc_out(pc_from_alu),
+		
+		.dbg_statusreg(dbg_statusreg)
 	);
 
 	control_unit control_unit_inst (
