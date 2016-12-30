@@ -1,26 +1,15 @@
 module nqcpu (
 	input clk,
 	
-	output [15:0] debugPC,
-	output [3:0] debugAluOp,
-	output [2:0] debugAluReg1,
-	output [2:0] debugAluReg2,
-	output [1:0] debugAluOpSource1,		// ALU first operand: 0 = reg, 1 = memory read, 2 = imm8, 3 = PC
-	output [1:0] debugAluOpSource2,		// ALU second operand: 0 = reg, 1 = ~reg, 2 = PC, 3 = ???
-	output debugAluDest,					// 0 = reg, 1 = PC
-
-	output [2:0] debugRegDest,
-	output debugRegSetH,
-	output debugRegSetL,
-
-	output [2:0] debugRegAddr,
-	output debugMemReadB,
-	output debugMemReadW,
-	output debugMemWriteB,
-	output debugMemWriteW,
-
-	output [5:0] debugSetRegCond,   // {should set when condition is true, Z doesn't matter, S doesn't matter, Z must be this, S must be this}
+	input needWait_i,
 	
+	output [15:0] addr_o,
+	output re_o, we_o,
+	inout [15:0] data_io,
+
+	output [15:0] debugPC,
+	output [9:0] dbg_state,
+	output [32:0] debugCtrl,
 	output [15:0] dbg_r0,
 	output [15:0] dbg_r1,
 	output [15:0] dbg_r2,
@@ -29,13 +18,20 @@ module nqcpu (
 	output [15:0] dbg_r5,
 	output [15:0] dbg_r6,
 	output [15:0] dbg_r7,
-	output [9:0] dbg_state,
 	
 	output dbg_setPC,
 	output [15:0] dbg_setPCValue,
 	
 	output [1:0] dbg_statusreg
 );
+
+	//-- handle data line tristate --
+	wire [15:0] data_i;
+	wire [15:0] data_o;
+	
+	assign data_i = we_o ? 16'h0 : data_io;
+	assign data_io = we_o ? data_o : 16'hZZZZ;
+	//-------------------------------
 
 	reg [15:0] pc;
 	
@@ -46,17 +42,25 @@ module nqcpu (
 	wire fetch_en, decode_en, alu_en, incr_pc, setPC;
 	wire [15:0] setPCValue;
 
-	wire fetch_ready;
+	wire fetch_re;
 	wire [15:0] fetched_instr;
 	wire [15:0] pc_from_fetch;
+	wire [15:0] fetch_addr;
 	fetch_stage fetch_inst (
 		.clk(clk),
 		.en(fetch_en),
+
 		.addr_in(pc),
-		.ready(fetch_ready),
+		.mem_re(fetch_re),
+		.mem_addr(fetch_addr),
+		.mem_data(data_i),
 		.instr_out(fetched_instr),
 		.pc_out(pc_from_fetch)
 	);
+	
+	assign re_o = fetch_re;
+	assign we_o = 1'b0;
+	assign addr_o = fetch_addr;
 
 	always @(posedge clk) begin
 		if(incr_pc) begin
@@ -150,7 +154,7 @@ module nqcpu (
 	control_unit control_unit_inst (
 		.clk(clk),
 		
-		.needWait(fetch_en & !fetch_ready),
+		.needWait(needWait_i),
 		
 		.fetch_en(fetch_en),
 		.decode_en(decode_en),
@@ -161,29 +165,7 @@ module nqcpu (
 		.dbg_state(dbg_state)
 	);
 
-	ctrl_decode debug_decode (
-		.control_signals(ctrl_from_decoder),
-
-		.aluOp(debugAluOp),
-		.aluReg1(debugAluReg1),
-		.aluReg2(debugAluReg2),
-		.aluOpSource1(debugAluOpSource1),
-		.aluOpSource2(debugAluOpSource2),
-		.aluDest(debugAluDest),
-
-		.regDest(debugRegDest),
-		.regSetH(debugRegSetH),
-		.regSetL(debugRegSetL),
-
-		.regAddr(debugRegAddr),
-		.memReadB(debugMemReadB),
-		.memReadW(debugMemReadW),
-		.memWriteB(debugMemWriteB),
-		.memWriteW(debugMemWriteW),
-
-		.setRegCond(debugSetRegCond)
-	);
-	
+	assign debugCtrl = ctrl_from_decoder;
 	assign debugPC = pc;
 	assign dbg_setPC = setPC;
 	assign dbg_setPCValue = setPCValue;
