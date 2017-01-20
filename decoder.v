@@ -99,12 +99,12 @@ module decoder (
 //    set or reset: 0 = reset, 1 = set
 
 // mov
-//  reg0 <- reg1:   0100 + [reg0] + 0 + [reg1] + 0 + 0 + 1 + 00
+//  reg0 <- reg1:   0100 + [reg0] + 0 + [reg1] + 000 + 1 + 0
 
 
 // mov
-//  *reg0 <- reg1:  0100 + [reg0] + 1 + [reg1] + 0 + 0 + [byte or word] + 0 + 0
-//  reg0 <- *reg1:  0100 + [reg0] + 1 + [reg1] + [dest byte] + 0 + [byte or word] + 0 + 1
+//  *reg2 <- reg1:  0100 + 000 + 1 + [reg1] + [reg2] + [byte or word] + 0
+//  reg0 <- *reg1:  0100 + [reg0] + 1 + [reg1] + [dest byte] + 0 + 0 + [byte or word] + 1
 //    byte or word: 0 = byte, 1 = word
 //                     for mem operations, word ops must be word-aligned (lsb must be 0)
 //    dest byte: 0 = low byte, 1 = high byte (ignored for word operations)
@@ -166,7 +166,7 @@ module decoder (
 
 	// for instr_mov
 	wire mov_dest_byte_high = instr[4];
-	wire mov_word = instr[2];
+	wire mov_word = instr[1];
 	wire mov_mem = instr[8];
 	wire mov_mem_read = instr[0];
 
@@ -226,7 +226,7 @@ module decoder (
 		instr_movimm ? !movimm_high :
 			1'b1;
 
-	assign regAddr = mov_mem_read ? reg1 : reg0;  // for all other instructions, this is a don't-care
+	assign regAddr = mov_mem_read ? reg1 : reg2;  // for all other instructions, this is a don't-care
 	assign memReadB = instr_mov ? (mov_mem & (mov_mem_read & !mov_word)) : 1'b0;
 	assign memReadW = instr_mov ? (mov_mem & (mov_mem_read & mov_word)) : 1'b0;
 	assign memWriteB = instr_mov ? (mov_mem & (!mov_mem_read & !mov_word)) : 1'b0;
