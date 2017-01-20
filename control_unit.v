@@ -19,6 +19,7 @@ module control_unit (
 	localparam ALU = 10'h4;
 	localparam MEM = 10'h8;
 	localparam REG_WRITE = 10'h10;
+
 	reg [9:0] current_state;
 	
 	initial begin
@@ -31,7 +32,6 @@ module control_unit (
 	assign mem_en = current_state[3];
 	assign reg_write_en = current_state[4];
 
-	
 	assign incr_pc = current_state[1];
 	
 	always @(posedge clk) begin
@@ -39,7 +39,8 @@ module control_unit (
 			case(current_state)
 				FETCH: current_state <= DECODE;
 				DECODE: current_state <= ALU;
-				ALU: current_state <= FETCH;
+				ALU: current_state <= REG_WRITE;
+				REG_WRITE: current_state <= FETCH;
 			endcase
 		end
 	end

@@ -8,29 +8,28 @@ module alu_stage (
 	// register file
 	output [2:0] rf_regA,
 	output [2:0] rf_regB,
-	output [2:0] rf_regDest,
 	output [15:0] rf_dataIn,
-	output rf_we,
-	output rf_hb,
-	output rf_lb,
 	input [15:0] rf_dataA,
 	input [15:0] rf_dataB,
 	
-	// memory interface
-	input [15:0] memData_in,    // read in from memory
-	output reg [15:0] memData_out,  // to write out to memory
-	
-	// setting PC
-	output setPC,
-	output [15:0] setPCValue,
-	
-	output reg [32:0] control_signals_out,
+	// outgoing control signals
+	output mem_op_next,           // 1 = memory read or write is needed (not a register; needs to be available sooner so control unit can go to mem state)
+	output [41:0] control_signals_out,
+
 	output reg [15:0] imm_out,
 	output reg [15:0] pc_out,
 
 	output [1:0] dbg_statusreg
 );
 	reg [1:0] statusReg;
+
+	reg [15:0] data_out_o;  // to write out to memory
+	reg [1:0] reg_write_o;  // {write data_out to high byte, write data_out to low byte}
+	reg [2:0] reg_dest_o;   // which register to write to
+	reg [1:0] mem_read_o;   // {1 = word;0 = byte, 1 = read}
+	reg [1:0] mem_write_o;  // {1 = word;0 = byte, 1 = write}
+	reg [15:0] mem_addr_o;  // address of memory read/write
+	reg setPC_o;            // write data_out to PC
 
 	// decode signals
 	wire [3:0] aluOp_in;
@@ -75,7 +74,6 @@ module alu_stage (
 	wire [15:0] aluSrc1;
 	assign aluSrc1 =
 		aluOpSource1_in == 2'h0 ? rf_dataA :
-		aluOpSource1_in == 2'h1 ? memData_in :
 		aluOpSource1_in == 2'h2 ? {imm_in} : pc_in;
 		
 	wire [15:0] aluSrc2;
@@ -108,20 +106,31 @@ module alu_stage (
 
 	assign rf_regA = aluReg1_in;
 	assign rf_regB = aluReg2_in;
-	assign rf_we = setSomeReg & !aluDest_in;
-	assign rf_hb = regSetH_in;
-	assign rf_lb = regSetL_in;
 	assign rf_dataIn = aluResult;
-	assign rf_regDest = regDest_in;
-
-	assign setPC = setSomeReg & aluDest_in;
-	assign setPCValue = aluResult;
 	
+	assign mem_op_next = memReadB_in | memReadW_in | memWriteB_in | memWriteW_in;
+	assign control_signals_out = {
+		data_out_o,
+		reg_write_o,
+		reg_dest_o,
+		setPC_o,
+		mem_read_o,
+		mem_write_o,
+		mem_addr_o};
+
 	always @(posedge clk) begin
 		if(en) begin
-			control_signals_out <= control_signals_in;
+			data_out_o <= aluResult;
+			setPC_o <= setSomeReg & aluDest_in;
+			reg_write_o <= (setSomeReg & !aluDest_in) ? {regSetH_in, regSetL_in} : 2'h0;
+			reg_dest_o <= regDest_in;
+			mem_read_o <= memReadB_in ? 2'b01 :
+							memReadW_in ? 2'b11 : 2'b00;
+			mem_write_o <= memWriteB_in ? 2'b01 :
+							memWriteW_in ? 2'b11 : 2'b00;
+			mem_addr_o <= (memWriteB_in | memWriteW_in) ? rf_dataB : rf_dataA;
+
 			imm_out <= imm_in;
-			memData_out <= aluResult;
 			pc_out <= pc_in;
 			statusReg <= {aluZero, aluCarry};  // not quite right; should only happen for a few instructions
 		end

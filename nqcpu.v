@@ -39,7 +39,7 @@ module nqcpu (
 		pc = 16'h0;
 	end
 
-	wire fetch_en, decode_en, alu_en, mem_en, reg_write_en, incr_pc, setPC;
+	wire fetch_en, decode_en, alu_en, mem_en, regWrite_en, incr_pc, setPC;
 	wire [15:0] setPCValue;
 
 	wire fetch_re;
@@ -66,7 +66,7 @@ module nqcpu (
 		if(incr_pc) begin
 			pc <= pc + 16'h2;
 		end
-		else if (setPC & alu_en) begin
+		else if (setPC & regWrite_en) begin
 			pc <= setPCValue;
 		end
 	end
@@ -116,7 +116,7 @@ module nqcpu (
 		.dbg_r7(dbg_r7)
 	);
 
-	wire [32:0] ctrl_from_alu;
+	wire [41:0] ctrl_from_alu;
 	wire [15:0] imm_from_alu;
 	wire [15:0] pc_from_alu;
 	alu_stage alu_inst (
@@ -129,26 +129,30 @@ module nqcpu (
 		// register file
 		.rf_regA(rf_regA),
 		.rf_regB(rf_regB),
-		.rf_regDest(rf_regDest),
-		.rf_dataIn(rf_dataIn),
-		.rf_we(rf_we),
-		.rf_hb(rf_hb),
-		.rf_lb(rf_lb),
 		.rf_dataA(rf_dataA),
 		.rf_dataB(rf_dataB),
 		
-		// memory interface
-		.memData_in(16'hDEAD),    // read in from memory
-		//.memData_out(??),  // to write out to memory
-		
-		.setPC(setPC),
-		.setPCValue(setPCValue),
-
 		.control_signals_out(ctrl_from_alu),
 		.imm_out(imm_from_alu),
 		.pc_out(pc_from_alu),
 		
 		.dbg_statusreg(dbg_statusreg)
+	);
+
+	regWrite_stage regWrite_inst (
+		.clk(clk),
+		.en(regWrite_en),
+		
+		.ctrl_i(ctrl_from_alu[41:20]),
+		
+		.rf_regDest(rf_regDest),
+		.rf_dataIn(rf_dataIn),
+		.rf_we(rf_we),
+		.rf_hb(rf_hb),
+		.rf_lb(rf_lb),
+
+		.setPC_o(setPC),
+		.setPCValue_o(setPCValue)
 	);
 
 	control_unit control_unit_inst (
@@ -160,7 +164,7 @@ module nqcpu (
 		.decode_en(decode_en),
 		.alu_en(alu_en),
 		.mem_en(mem_en),
-		.reg_write_en(reg_write_en),
+		.reg_write_en(regWrite_en),
 		
 		.incr_pc(incr_pc),
 		
