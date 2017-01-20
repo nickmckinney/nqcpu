@@ -39,7 +39,7 @@ module nqcpu (
 		pc = 16'h0;
 	end
 
-	wire fetch_en, decode_en, alu_en, incr_pc, setPC;
+	wire fetch_en, decode_en, alu_en, mem_en, reg_write_en, incr_pc, setPC;
 	wire [15:0] setPCValue;
 
 	wire fetch_re;
@@ -159,6 +159,8 @@ module nqcpu (
 		.fetch_en(fetch_en),
 		.decode_en(decode_en),
 		.alu_en(alu_en),
+		.mem_en(mem_en),
+		.reg_write_en(reg_write_en),
 		
 		.incr_pc(incr_pc),
 		

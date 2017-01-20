@@ -6,6 +6,8 @@ module control_unit (
 	output fetch_en,
 	output decode_en,
 	output alu_en,
+	output mem_en,
+	output reg_write_en,
 	
 	output incr_pc,
 	
@@ -26,6 +28,9 @@ module control_unit (
 	assign fetch_en = current_state[0];
 	assign decode_en = current_state[1];
 	assign alu_en = current_state[2];
+	assign mem_en = current_state[3];
+	assign reg_write_en = current_state[4];
+
 	
 	assign incr_pc = current_state[1];
 	
