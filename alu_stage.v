@@ -80,8 +80,8 @@ module alu_stage (
 		
 	wire [15:0] aluSrc2;
 	assign aluSrc2 =
-		aluOpSource1_in == 2'h0 ? rf_dataB :
-		aluOpSource1_in == 2'h1 ? ~rf_dataIn : pc_in;
+		aluOpSource2_in == 2'h0 ? rf_dataB :
+		aluOpSource2_in == 2'h1 ? ~rf_dataIn : pc_in;
 
 	wire [15:0] aluResult;
 	wire aluZero, aluCarry;
