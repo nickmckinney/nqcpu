@@ -23,18 +23,20 @@ module testROM (
 			read_finished <= 1'b1;
 
 			case(addr_i[15:1])
-				15'h0: romData <= 16'h0BB6;
+				15'h0: romData <= 16'h0bb6;
 				15'h1: romData <= 16'h0102;
 				15'h2: romData <= 16'h0326;
-				15'h3: romData <= 16'h054A;
-				15'h4: romData <= 16'h5201;
-				15'h5: romData <= 16'h540A;
-				15'h6: romData <= 16'h0AA0;
-				15'h7: romData <= 16'h0004;
-				15'h8: romData <= 16'h0809;
-				15'h9: romData <= 16'h6AFA;
-				15'hA: romData <= 16'h6E00;
-				default: romData <= 16'b1111_000000000000;		// nop
+				15'h3: romData <= 16'h054a;
+				15'h4: romData <= 16'h5c0a;
+				15'h5: romData <= 16'h5d00;
+				15'h6: romData <= 16'h44c2;
+				15'h7: romData <= 16'h5201;
+				15'h8: romData <= 16'h0aa0;
+				15'h9: romData <= 16'h0004;
+				15'ha: romData <= 16'h0809;
+				15'hb: romData <= 16'h6afa;
+				15'hc: romData <= 16'h6e00;
+				default: romData <= 16'hf000;
 			endcase
 		end
 		else begin
