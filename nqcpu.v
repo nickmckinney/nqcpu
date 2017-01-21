@@ -25,14 +25,7 @@ module nqcpu (
 	output [1:0] dbg_statusreg
 );
 
-	//-- handle data line tristate --
 	wire [15:0] data_i;
-	wire [15:0] data_o;
-	
-	assign data_i = we_o ? 16'h0 : data_io;
-	assign data_io = we_o ? data_o : 16'hZZZZ;
-	//-------------------------------
-
 	reg [15:0] pc;
 	
 	initial begin
@@ -41,6 +34,7 @@ module nqcpu (
 
 	wire fetch_en, decode_en, alu_en, mem_en, regWrite_en, incr_pc, setPC;
 	wire [15:0] setPCValue;
+	wire ctrl_needWait;
 
 	wire fetch_re;
 	wire [15:0] fetched_instr;
@@ -58,9 +52,26 @@ module nqcpu (
 		.pc_out(pc_from_fetch)
 	);
 	
-	assign re_o = fetch_re;
-	assign we_o = 1'b0;
-	assign addr_o = fetch_addr;
+	cpu_memctl memctl_inst (
+		.fetch_en(fetch_en),
+		.fetch_addr(fetch_addr),
+		.fetch_re(fetch_re),
+
+		.mem_en(mem_en),
+		.mem_addr(16'h0),
+		.mem_re(1'b0),
+		.mem_we(1'b0),
+		.mem_dataOut(16'h0),
+		
+		.needWait_o(ctrl_needWait),
+		.dataRead(data_i),
+
+		.addr_o(addr_o),
+		.re_o(re_o),
+		.we_o(we_o),
+		.data_io(data_io),
+		.needWait_i(needWait_i)
+	);
 
 	always @(posedge clk) begin
 		if(incr_pc) begin
@@ -158,7 +169,7 @@ module nqcpu (
 	control_unit control_unit_inst (
 		.clk(clk),
 		
-		.needWait(needWait_i),
+		.needWait(ctrl_needWait),
 		
 		.fetch_en(fetch_en),
 		.decode_en(decode_en),
