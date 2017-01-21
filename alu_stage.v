@@ -110,13 +110,13 @@ module alu_stage (
 	
 	assign mem_op_next = memReadB_in | memReadW_in | memWriteB_in | memWriteW_in;
 	assign control_signals_out = {
-		data_out_o,
-		reg_write_o,
-		reg_dest_o,
-		setPC_o,
-		mem_read_o,
-		mem_write_o,
-		mem_addr_o};
+		data_out_o,   // [41:26]
+		reg_write_o,  // [25:24]
+		reg_dest_o,   // [23:21]
+		setPC_o,      // [20]
+		mem_read_o,   // [19:18]
+		mem_write_o,  // [17:16]
+		mem_addr_o};  // [15:0]
 
 	always @(posedge clk) begin
 		if(en) begin
