@@ -1,7 +1,7 @@
 module soc (
 	input clk,
 
-	output [15:0] debugPC,
+	//output [15:0] debugPC,
 	output [3:0] debugAluOp,
 	output [2:0] debugAluReg1,
 	output [2:0] debugAluReg2,
@@ -31,8 +31,8 @@ module soc (
 	output [15:0] dbg_r7,
 	output [9:0] dbg_state,
 	
-	output dbg_setPC,
-	output [15:0] dbg_setPCValue,
+	//output dbg_setPC,
+	//output [15:0] dbg_setPCValue,
 	
 	output [1:0] dbg_statusreg,
 	output dbg_needWait,
@@ -40,7 +40,9 @@ module soc (
 	output dbg_re_o,
 	output dbg_we_o,
 	output [15:0] dbg_addr_o,
-	output [15:0] dbg_data_io
+	output [15:0] dbg_data_io,
+
+	output [41:0] dbg_ctrl_alu
 );
 
 	wire needWait_i;
@@ -58,7 +60,7 @@ module soc (
 		.data_io(data_io),
 
 		.debugCtrl(ctrl_from_decoder),
-		.debugPC(debugPC),
+		//.debugPC(debugPC),
 		.dbg_r0(dbg_r0),
 		.dbg_r1(dbg_r1),
 		.dbg_r2(dbg_r2),
@@ -68,9 +70,11 @@ module soc (
 		.dbg_r6(dbg_r6),
 		.dbg_r7(dbg_r7),
 		.dbg_state(dbg_state),
-		.dbg_setPC(dbg_setPC),
+		//.dbg_setPC(dbg_setPC),
 		.dbg_setPCValue(dbg_setPCValue),
 		.dbg_statusreg(dbg_statusreg),
+
+		.ctrl_alu_o(dbg_ctrl_alu)
 	);
 
 	testROM testROM_inst (

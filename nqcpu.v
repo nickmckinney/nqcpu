@@ -22,7 +22,8 @@ module nqcpu (
 	output dbg_setPC,
 	output [15:0] dbg_setPCValue,
 	
-	output [1:0] dbg_statusreg
+	output [1:0] dbg_statusreg,
+	output [41:0] ctrl_alu_o
 );
 
 	wire [15:0] data_i;
@@ -210,4 +211,5 @@ module nqcpu (
 	assign debugPC = pc;
 	assign dbg_setPC = setPC;
 	assign dbg_setPCValue = setPCValue;
+	assign ctrl_alu_o = ctrl_from_alu;
 endmodule
