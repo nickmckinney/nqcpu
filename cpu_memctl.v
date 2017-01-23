@@ -26,7 +26,7 @@ module cpu_memctl (
 	assign data_io = we_o ? data_o : 16'hZZZZ;
 	//-------------------------------
 
-	assign addr_o = fetch_en ? fetch_addr : mem_en;
+	assign addr_o = fetch_en ? fetch_addr : mem_addr;
 	assign re_o = fetch_en ? fetch_re : (mem_en & mem_re);
 	assign we_o = mem_en & mem_we;
 	assign data_o = mem_dataOut;
