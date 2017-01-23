@@ -2,7 +2,8 @@ module control_unit (
 	input clk,
 	
 	input needWait,
-	
+	input mem_op_next,
+
 	output fetch_en,
 	output decode_en,
 	output alu_en,
@@ -39,7 +40,8 @@ module control_unit (
 			case(current_state)
 				FETCH: current_state <= DECODE;
 				DECODE: current_state <= ALU;
-				ALU: current_state <= REG_WRITE;
+				ALU: current_state <= mem_op_next ? MEM : REG_WRITE;
+				MEM: current_state <= REG_WRITE;
 				REG_WRITE: current_state <= FETCH;
 			endcase
 		end

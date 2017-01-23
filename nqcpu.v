@@ -51,17 +51,21 @@ module nqcpu (
 		.instr_out(fetched_instr),
 		.pc_out(pc_from_fetch)
 	);
-	
+
+	wire [15:0] mc_mem_addr;
+	wire mc_mem_re, mc_mem_we;
+	wire [15:0] mc_mem_dataOut;
+
 	cpu_memctl memctl_inst (
 		.fetch_en(fetch_en),
 		.fetch_addr(fetch_addr),
 		.fetch_re(fetch_re),
 
 		.mem_en(mem_en),
-		.mem_addr(16'h0),
-		.mem_re(1'b0),
-		.mem_we(1'b0),
-		.mem_dataOut(16'h0),
+		.mem_addr(mc_mem_addr),
+		.mem_re(mc_mem_re),
+		.mem_we(mc_mem_we),
+		.mem_dataOut(mc_mem_dataOut),
 		
 		.needWait_o(ctrl_needWait),
 		.dataRead(data_i),
@@ -130,6 +134,7 @@ module nqcpu (
 	wire [41:0] ctrl_from_alu;
 	wire [15:0] imm_from_alu;
 	wire [15:0] pc_from_alu;
+	wire mem_op_next;
 	alu_stage alu_inst (
 		.clk(clk),
 		.en(alu_en),
@@ -142,19 +147,37 @@ module nqcpu (
 		.rf_regB(rf_regB),
 		.rf_dataA(rf_dataA),
 		.rf_dataB(rf_dataB),
-		
+
+		.mem_op_next(mem_op_next),
 		.control_signals_out(ctrl_from_alu),
 		.imm_out(imm_from_alu),
 		.pc_out(pc_from_alu),
-		
+
 		.dbg_statusreg(dbg_statusreg)
 	);
 
+	wire [21:0] ctrl_from_mem;
+	mem_stage memStage_inst (
+		.clk(clk),
+		.en(mem_en),
+
+		.ctrl_i(ctrl_from_alu),
+
+		.mem_addr_o(mc_mem_addr),
+		.mem_re_o(mc_mem_re),
+		.mem_we_o(mc_mem_we),
+		.mem_data_i(data_i),
+		.mem_data_o(mc_mem_dataOut),
+
+		.ctrl_o(ctrl_from_mem)
+	);
+
+	wire did_mem_op = ctrl_from_alu[18] | ctrl_from_alu[16];
 	regWrite_stage regWrite_inst (
 		.clk(clk),
 		.en(regWrite_en),
 		
-		.ctrl_i(ctrl_from_alu[41:20]),
+		.ctrl_i(did_mem_op ? ctrl_from_mem : ctrl_from_alu[41:20]),
 		
 		.rf_regDest(rf_regDest),
 		.rf_dataIn(rf_dataIn),
@@ -170,6 +193,7 @@ module nqcpu (
 		.clk(clk),
 		
 		.needWait(ctrl_needWait),
+		.mem_op_next(mem_op_next),
 		
 		.fetch_en(fetch_en),
 		.decode_en(decode_en),
