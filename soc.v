@@ -42,7 +42,7 @@ module soc (
 	output [15:0] dbg_addr_o,
 	output [15:0] dbg_data_io,
 
-	output [41:0] dbg_ctrl_alu
+	output [$bits(alu_signals)-1:0] dbg_ctrl_alu
 );
 
 	wire needWait_i;

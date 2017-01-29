@@ -23,7 +23,7 @@ module nqcpu (
 	output [15:0] dbg_setPCValue,
 	
 	output [1:0] dbg_statusreg,
-	output [41:0] ctrl_alu_o
+	output alu_signals ctrl_alu_o
 );
 
 	wire [15:0] data_i;
@@ -132,7 +132,7 @@ module nqcpu (
 		.dbg_r7(dbg_r7)
 	);
 
-	wire [41:0] ctrl_from_alu;
+	alu_signals ctrl_from_alu;
 	wire [15:0] imm_from_alu;
 	wire [15:0] pc_from_alu;
 	wire mem_op_next;
@@ -157,7 +157,7 @@ module nqcpu (
 		.dbg_statusreg(dbg_statusreg)
 	);
 
-	wire [21:0] ctrl_from_mem;
+	alu_signals ctrl_from_mem;
 	mem_stage memStage_inst (
 		.clk(clk),
 		.en(mem_en),
@@ -173,12 +173,12 @@ module nqcpu (
 		.ctrl_o(ctrl_from_mem)
 	);
 
-	wire did_mem_op = ctrl_from_alu[18] | ctrl_from_alu[16];
+	wire did_mem_op = ctrl_from_alu.mem_read[0] | ctrl_from_alu.mem_write[0];
 	regWrite_stage regWrite_inst (
 		.clk(clk),
 		.en(regWrite_en),
 		
-		.ctrl_i(did_mem_op ? ctrl_from_mem : ctrl_from_alu[41:20]),
+		.ctrl_i(did_mem_op ? ctrl_from_mem : ctrl_from_alu),
 		
 		.rf_regDest(rf_regDest),
 		.rf_dataIn(rf_dataIn),
