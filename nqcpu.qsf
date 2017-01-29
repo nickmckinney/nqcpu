@@ -57,8 +57,6 @@ set_global_assignment -name VERILOG_FILE shifter_tb.v
 set_global_assignment -name VERILOG_FILE alu_tb.v
 set_global_assignment -name VERILOG_FILE decoder_stage.v
 set_global_assignment -name VERILOG_FILE fetch_stage.v
-set_global_assignment -name VERILOG_FILE ctrl_decode.v
-set_global_assignment -name VERILOG_FILE ctrl_encode.v
 set_global_assignment -name VERILOG_FILE nqcpu.v
 set_global_assignment -name VERILOG_FILE alu_stage.v
 set_global_assignment -name VERILOG_FILE control_unit.v
