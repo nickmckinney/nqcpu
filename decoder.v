@@ -1,25 +1,28 @@
+typedef struct packed {
+	logic [3:0] aluOp;
+	logic [2:0] aluReg1;
+	logic [2:0] aluReg2;
+	logic [1:0] aluOpSource1;		// ALU first operand: 0 = reg, 1 = memory read, 2 = imm8, 3 = PC
+	logic [1:0] aluOpSource2;		// ALU second operand: 0 = reg, 1 = ~reg, 2 = PC, 3 = ???
+	logic aluDest;					// 0 = reg, 1 = PC
+
+	logic [2:0] regDest;
+	logic regSetH;
+	logic regSetL;
+
+	logic [2:0] regAddr;
+	logic memReadB;
+	logic memReadW;
+	logic memWriteB;
+	logic memWriteW;
+
+	logic [5:0] setRegCond;   // {should set when condition is true, Z doesn't matter, S doesn't matter, Z must be this, S must be this}
+} decoder_signals;
+
 module decoder (
 	input [15:0] instr,
 	
-	output [3:0] aluOp,
-	output [2:0] aluReg1,
-	output [2:0] aluReg2,
-	output [1:0] aluOpSource1,		// ALU first operand: 0 = reg, 1 = memory read, 2 = imm8, 3 = PC
-	output [1:0] aluOpSource2,		// ALU second operand: 0 = reg, 1 = ~reg, 2 = PC, 3 = ???
-	output aluDest,					// 0 = reg, 1 = PC
-
-	output [2:0] regDest,
-	output regSetH,
-	output regSetL,
-	
-	output [2:0] regAddr,
-	output memReadB,
-	output memReadW,
-	output memWriteB,
-	output memWriteW,
-	
-	output [5:0] setRegCond,   // {should set when condition is true, Z condition, combiner, C condition}, condition = (00: must be 0, 01: must be 1, 1x: don't care)
-	
+	output decoder_signals signals_out,
 	output [15:0] imm
 );
 
@@ -186,7 +189,7 @@ module decoder (
 		branch_cond == 3'h5 ? 6'b1_01_0_01 :		// LE
 			6'b1_10_0_10;
 
-	assign aluOp =
+	assign signals_out.aluOp =
 		instr_math ? {1'b0, math_op} :
 		instr_shift ? {1'b1, shift_dir, shift_extend} :
 		instr_notneg ? ALU_ADD :
@@ -194,45 +197,45 @@ module decoder (
 		instr_movimm ? ALU_JUSTX :
 			ALU_ADD;
 
-	assign aluReg1 = reg1;
-	assign aluReg2 = reg2;
+	assign signals_out.aluReg1 = reg1;
+	assign signals_out.aluReg2 = reg2;
 
-	assign aluOpSource1 =
+	assign signals_out.aluOpSource1 =
 		instr_mov ? ((mov_mem & mov_mem_read) ? 2'h1 : 2'h0) :
 		instr_notneg ? 2'h2 :
 		instr_movimm ? 2'h2 :
 		instr_branch ? 2'h2 :
 			2'h0;
 
-	assign aluOpSource2 =
+	assign signals_out.aluOpSource2 =
 		instr_notneg ? 2'h1 :
 		instr_branch ? 2'h2 :
 			2'h0;
 
-	assign aluDest =
+	assign signals_out.aluDest =
 		instr_branch ? 1'b1 :
 		instr_jmp ? 1'b1 :
 			1'b0;
 
-	assign regDest = reg0;
+	assign signals_out.regDest = reg0;
 	
-	assign regSetH =
+	assign signals_out.regSetH =
 		instr_mov ? (mov_word | mov_dest_byte_high) :
 		instr_movimm ? movimm_high :
 			1'b1;
 
-	assign regSetL =
+	assign signals_out.regSetL =
 		instr_mov ? (mov_word | !mov_dest_byte_high) :
 		instr_movimm ? !movimm_high :
 			1'b1;
 
-	assign regAddr = mov_mem_read ? reg1 : reg2;  // for all other instructions, this is a don't-care
-	assign memReadB = instr_mov ? (mov_mem & (mov_mem_read & !mov_word)) : 1'b0;
-	assign memReadW = instr_mov ? (mov_mem & (mov_mem_read & mov_word)) : 1'b0;
-	assign memWriteB = instr_mov ? (mov_mem & (!mov_mem_read & !mov_word)) : 1'b0;
-	assign memWriteW = instr_mov ? (mov_mem & (!mov_mem_read & mov_word)) : 1'b0;
+	assign signals_out.regAddr = mov_mem_read ? reg1 : reg2;  // for all other instructions, this is a don't-care
+	assign signals_out.memReadB = instr_mov ? (mov_mem & (mov_mem_read & !mov_word)) : 1'b0;
+	assign signals_out.memReadW = instr_mov ? (mov_mem & (mov_mem_read & mov_word)) : 1'b0;
+	assign signals_out.memWriteB = instr_mov ? (mov_mem & (!mov_mem_read & !mov_word)) : 1'b0;
+	assign signals_out.memWriteW = instr_mov ? (mov_mem & (!mov_mem_read & mov_word)) : 1'b0;
 	
-	assign setRegCond =
+	assign signals_out.setRegCond =
 		instr_mov ? ((!mov_mem | mov_mem_read) ? 6'b1_10_0_10 : 6'b000000) :
 		instr_branch ? branch_set_cond :
 		instr_nop ? 6'b000000 :

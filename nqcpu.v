@@ -9,7 +9,7 @@ module nqcpu (
 
 	output [15:0] debugPC,
 	output [9:0] dbg_state,
-	output [32:0] debugCtrl,
+	output decoder_signals debugCtrl,
 	output [15:0] dbg_r0,
 	output [15:0] dbg_r1,
 	output [15:0] dbg_r2,
@@ -87,7 +87,7 @@ module nqcpu (
 		end
 	end
 
-	wire [32:0] ctrl_from_decoder;
+	decoder_signals ctrl_from_decoder;
 	wire [15:0] imm_from_decoder;
 	wire [15:0] pc_from_decoder;
 

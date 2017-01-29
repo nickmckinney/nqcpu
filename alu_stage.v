@@ -2,7 +2,7 @@ module alu_stage (
 	input clk,
 	input en,
 	input [15:0] pc_in,
-	input [32:0] control_signals_in,
+	input decoder_signals control_signals_in,
 	input [15:0] imm_in,
 
 	// register file
@@ -31,60 +31,20 @@ module alu_stage (
 	reg [15:0] mem_addr_o;  // address of memory read/write
 	reg setPC_o;            // write data_out to PC
 
-	// decode signals
-	wire [3:0] aluOp_in;
-	wire [2:0] aluReg1_in;
-	wire [2:0] aluReg2_in;
-	wire [1:0] aluOpSource1_in;
-	wire [1:0] aluOpSource2_in;
-	wire aluDest_in;
-	wire [2:0] regDest_in;
-	wire regSetH_in;
-	wire regSetL_in;
-	wire [2:0] regAddr_in;
-	wire memReadB_in;
-	wire memReadW_in;
-	wire memWriteB_in;
-	wire memWriteW_in;
-	wire [5:0] setRegCond_in;
-
-	ctrl_decode ctrl_decode_inst (
-		.control_signals(control_signals_in),
-
-		.aluOp(aluOp_in),
-		.aluReg1(aluReg1_in),
-		.aluReg2(aluReg2_in),
-		.aluOpSource1(aluOpSource1_in),		// ALU first operand: 0 = reg, 1 = memory read, 2 = imm8, 3 = PC
-		.aluOpSource2(aluOpSource2_in),		// ALU second operand: 0 = reg, 1 = ~reg, 2 = PC, 3 = ???
-		.aluDest(aluDest_in),					// 0 = reg, 1 = PC
-
-		.regDest(regDest_in),
-		.regSetH(regSetH_in),
-		.regSetL(regSetL_in),
-
-		.regAddr(regAddr_in),
-		.memReadB(memReadB_in),
-		.memReadW(memReadW_in),
-		.memWriteB(memWriteB_in),
-		.memWriteW(memWriteW_in),
-
-		.setRegCond(setRegCond_in)   // {should set when condition is true, Z doesn't matter, S doesn't matter, Z must be this, S must be this}
-	);
-
 	wire [15:0] aluSrc1;
 	assign aluSrc1 =
-		aluOpSource1_in == 2'h0 ? rf_dataA :
-		aluOpSource1_in == 2'h2 ? {imm_in} : pc_in;
+		control_signals_in.aluOpSource1 == 2'h0 ? rf_dataA :
+		control_signals_in.aluOpSource1 == 2'h2 ? {imm_in} : pc_in;
 		
 	wire [15:0] aluSrc2;
 	assign aluSrc2 =
-		aluOpSource2_in == 2'h0 ? rf_dataB :
-		aluOpSource2_in == 2'h1 ? ~rf_dataIn : pc_in;
+		control_signals_in.aluOpSource2 == 2'h0 ? rf_dataB :
+		control_signals_in.aluOpSource2 == 2'h1 ? ~rf_dataIn : pc_in;
 
 	wire [15:0] aluResult;
 	wire aluZero, aluCarry;
 	alu alu_inst (
-		.op(aluOp_in),
+		.op(control_signals_in.aluOp),
 		.x(aluSrc1),
 		.y(aluSrc2),
 		.result(aluResult),
@@ -93,22 +53,22 @@ module alu_stage (
 	);
 	
 	wire setRegZCond, setRegCCond, setSomeReg;
-	assign setRegZCond = setRegCond_in[4] | (setRegCond_in[3] == statusReg[1]);
-	assign setRegCCond = setRegCond_in[1] | (setRegCond_in[0] == statusReg[0]);
+	assign setRegZCond = control_signals_in.setRegCond[4] | (control_signals_in.setRegCond[3] == statusReg[1]);
+	assign setRegCCond = control_signals_in.setRegCond[1] | (control_signals_in.setRegCond[0] == statusReg[0]);
 	assign setSomeReg =
 		en &
-		setRegCond_in[5] &
+		control_signals_in.setRegCond[5] &
 		(
-			setRegCond_in[2] ?
+			control_signals_in.setRegCond[2] ?
 				(setRegZCond & setRegCCond) :
 				(setRegZCond | setRegCCond)
 		);
 
-	assign rf_regA = aluReg1_in;
-	assign rf_regB = aluReg2_in;
+	assign rf_regA = control_signals_in.aluReg1;
+	assign rf_regB = control_signals_in.aluReg2;
 	assign rf_dataIn = aluResult;
 	
-	assign mem_op_next = memReadB_in | memReadW_in | memWriteB_in | memWriteW_in;
+	assign mem_op_next = control_signals_in.memReadB | control_signals_in.memReadW | control_signals_in.memWriteB | control_signals_in.memWriteW;
 	assign control_signals_out = {
 		data_out_o,   // [41:26]
 		reg_write_o,  // [25:24]
@@ -121,14 +81,14 @@ module alu_stage (
 	always @(posedge clk) begin
 		if(en) begin
 			data_out_o <= aluResult;
-			setPC_o <= setSomeReg & aluDest_in;
-			reg_write_o <= (setSomeReg & !aluDest_in) ? {regSetH_in, regSetL_in} : 2'h0;
-			reg_dest_o <= regDest_in;
-			mem_read_o <= memReadB_in ? 2'b01 :
-							memReadW_in ? 2'b11 : 2'b00;
-			mem_write_o <= memWriteB_in ? 2'b01 :
-							memWriteW_in ? 2'b11 : 2'b00;
-			mem_addr_o <= (memWriteB_in | memWriteW_in) ? rf_dataB : rf_dataA;
+			setPC_o <= setSomeReg & control_signals_in.aluDest;
+			reg_write_o <= (setSomeReg & !control_signals_in.aluDest) ? {control_signals_in.regSetH, control_signals_in.regSetL} : 2'h0;
+			reg_dest_o <= control_signals_in.regDest;
+			mem_read_o <= control_signals_in.memReadB ? 2'b01 :
+							control_signals_in.memReadW ? 2'b11 : 2'b00;
+			mem_write_o <= control_signals_in.memWriteB ? 2'b01 :
+							control_signals_in.memWriteW ? 2'b11 : 2'b00;
+			mem_addr_o <= (control_signals_in.memWriteB | control_signals_in.memWriteW) ? rf_dataB : rf_dataA;
 
 			imm_out <= imm_in;
 			pc_out <= pc_in;

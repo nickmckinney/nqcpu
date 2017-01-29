@@ -49,7 +49,7 @@ module soc (
 	wire [15:0] addr_o;
 	wire re_o, we_o;
 	wire [15:0] data_io;
-	wire [32:0] ctrl_from_decoder;
+	decoder_signals ctrl_from_decoder;
 
 	nqcpu cpu_inst (
 		.clk(clk),
@@ -85,28 +85,21 @@ module soc (
 		.data_io(data_io)
 	);
 
-	ctrl_decode debug_decode (
-		.control_signals(ctrl_from_decoder),
-
-		.aluOp(debugAluOp),
-		.aluReg1(debugAluReg1),
-		.aluReg2(debugAluReg2),
-		.aluOpSource1(debugAluOpSource1),
-		.aluOpSource2(debugAluOpSource2),
-		.aluDest(debugAluDest),
-
-		.regDest(debugRegDest),
-		.regSetH(debugRegSetH),
-		.regSetL(debugRegSetL),
-
-		.regAddr(debugRegAddr),
-		.memReadB(debugMemReadB),
-		.memReadW(debugMemReadW),
-		.memWriteB(debugMemWriteB),
-		.memWriteW(debugMemWriteW),
-
-		.setRegCond(debugSetRegCond)
-	);
+	assign debugAluOp = ctrl_from_decoder.aluOp;
+	assign debugAluReg1 = ctrl_from_decoder.aluReg1;
+	assign debugAluReg2 = ctrl_from_decoder.aluReg2;
+	assign debugAluOpSource1 = ctrl_from_decoder.aluOpSource1;
+	assign debugAluOpSource2 = ctrl_from_decoder.aluOpSource2;
+	assign debugAluDest = ctrl_from_decoder.aluDest;
+	assign debugRegDest = ctrl_from_decoder.regDest;
+	assign debugRegSetH = ctrl_from_decoder.regSetH;
+	assign debugRegSetL = ctrl_from_decoder.regSetL;
+	assign debugRegAddr = ctrl_from_decoder.regAddr;
+	assign debugMemReadB = ctrl_from_decoder.memReadB;
+	assign debugMemReadW = ctrl_from_decoder.memReadW;
+	assign debugMemWriteB = ctrl_from_decoder.memWriteB;
+	assign debugMemWriteW = ctrl_from_decoder.memWriteW;
+	assign debugSetRegCond = ctrl_from_decoder.setRegCond;
 
 	assign dbg_needWait = needWait_i;
 	assign dbg_re_o = re_o;
