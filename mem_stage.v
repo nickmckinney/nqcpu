@@ -30,10 +30,6 @@ module mem_stage (
 	// if address is odd, then the byte being read in is the LSB (big-endian), otherwise MSB
 	assign mem_byte_in = mem_addr[0] ? mem_data_i[7:0] : mem_data_i[15:8];
 
-	initial begin
-		ctrl_o = 22'h0;
-	end
-
 	always @(posedge clk) begin
 		if(en) begin
 			// if reading memory, replace data from ALU with whatever got read
