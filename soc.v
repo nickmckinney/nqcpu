@@ -71,7 +71,7 @@ module soc (
 		.dbg_r7(dbg_r7),
 		.dbg_state(dbg_state),
 		//.dbg_setPC(dbg_setPC),
-		.dbg_setPCValue(dbg_setPCValue),
+		//.dbg_setPCValue(dbg_setPCValue),
 		.dbg_statusreg(dbg_statusreg),
 
 		.ctrl_alu_o(dbg_ctrl_alu)
