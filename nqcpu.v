@@ -103,7 +103,7 @@ module nqcpu (
 	
 	wire [2:0] rf_regA;
 	wire [2:0] rf_regB;
-	wire [2:0] rf_regDest;
+	wire [3:0] rf_regDest;
 	wire [15:0] rf_dataIn;
 	wire rf_we;
 	wire rf_hb;

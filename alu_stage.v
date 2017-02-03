@@ -1,7 +1,7 @@
 typedef struct packed {
 	logic [15:0] data_out;  // to write out to memory
 	logic [1:0] reg_write;  // {write data_out to high byte, write data_out to low byte}
-	logic [2:0] reg_dest;   // which register to write to
+	logic [3:0] reg_dest;   // which register to write to
 	logic setPC;            // write data_out to PC
 	logic [1:0] mem_read;   // {1 = word;0 = byte, 1 = read}
 	logic [1:0] mem_write;  // {1 = word;0 = byte, 1 = write}

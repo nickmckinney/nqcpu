@@ -6,7 +6,7 @@ module regWrite_stage (
 	input alu_signals ctrl_i,
 
 	// register file
-	output [2:0] rf_regDest,
+	output [3:0] rf_regDest,
 	output [15:0] rf_dataIn,
 	output rf_we,
 	output rf_hb,

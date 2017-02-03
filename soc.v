@@ -9,7 +9,7 @@ module soc (
 	output [1:0] debugAluOpSource2,
 	output debugAluDest,
 
-	output [2:0] debugRegDest,
+	output [3:0] debugRegDest,
 	output debugRegSetH,
 	output debugRegSetL,
 

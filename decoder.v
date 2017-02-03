@@ -6,7 +6,7 @@ typedef struct packed {
 	logic [1:0] aluOpSource2;		// ALU second operand: 0 = reg, 1 = ~reg, 2 = PC, 3 = ???
 	logic aluDest;					// 0 = reg, 1 = PC
 
-	logic [2:0] regDest;
+	logic [3:0] regDest;
 	logic regSetH;
 	logic regSetL;
 
@@ -217,7 +217,7 @@ module decoder (
 		instr_jmp ? 1'b1 :
 			1'b0;
 
-	assign signals_out.regDest = reg0;
+	assign signals_out.regDest = {1'b0, reg0};
 	
 	assign signals_out.regSetH =
 		instr_mov ? (mov_word | mov_dest_byte_high) :
