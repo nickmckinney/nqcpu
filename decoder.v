@@ -16,7 +16,7 @@ typedef struct packed {
 	logic memWriteB;
 	logic memWriteW;
 
-	logic [5:0] setRegCond;   // {should set when condition is true, Z doesn't matter, S doesn't matter, Z must be this, S must be this}
+	logic [5:0] setRegCond;   // {should set when condition is true, Z condition, combiner, C condition}, condition = (00: must be 0, 01: must be 1, 1x: don't care)
 } decoder_signals;
 
 module decoder (
@@ -130,7 +130,7 @@ module decoder (
 //            111 always  (Z = x, C = x)
 
 // jmp
-//  0111 + 00000 + [reg1] + 00000
+//  0111 + 0000 + [reg1] + 00000
 //    basically moves reg1 to pc
 
 // sdb
