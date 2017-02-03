@@ -5,18 +5,20 @@ module regFile_tb ();
 	reg clk;
 	reg [2:0] regA;
 	reg [2:0] regB;
-	reg [2:0] regDest;
+	reg [3:0] regDest;
 	reg [15:0] dataIn;
 	reg we, hb, lb;
 	wire [15:0] dataA;
 	wire [15:0] dataB;
+	wire [7:0] progBank;
+	wire [7:0] dataBank;
 	
 	initial begin
 		clk = 1'b0;
 		
 		regA = 3'h0;
 		regB = 3'h0;
-		regDest = 3'h0;
+		regDest = 4'h0;
 		we = 1'b0;
 		hb = 1'b0;
 		lb = 1'b0;
@@ -24,7 +26,7 @@ module regFile_tb ();
 		
 		#2
 		regA = 3'h1;
-		regDest = 3'h1;
+		regDest = 4'h1;
 		dataIn = 16'hDEAD;
 		we = 1'b1;
 		hb = 1'b1;
@@ -40,7 +42,7 @@ module regFile_tb ();
 		lb = 1'b1;
 		
 		#2
-		regDest = 3'h2;
+		regDest = 4'h2;
 		hb = 1'b0;
 		dataIn = 16'h9876;
 		
@@ -51,7 +53,7 @@ module regFile_tb ();
 		
 		#2
 		regB = 3'h7;
-		regDest = 3'h7;
+		regDest = 4'h7;
 		lb = 1'b0;
 		hb = 1'b0;
 		we = 1'b1;
@@ -61,6 +63,17 @@ module regFile_tb ();
 		lb = 1'b1;
 		hb = 1'b1;
 		we = 1'b0;
+		
+		#2
+		regDest = 4'h8;
+		lb = 1'b1;
+		hb = 1'b0;
+		we = 1'b1;
+		dataIn = 16'hEFAC;
+		
+		#2
+		lb = 1'b0;
+		hb = 1'b1;
 		
 		#5
 		$stop;
@@ -78,6 +91,8 @@ module regFile_tb ();
 		.hb(hb),
 		.lb(lb),
 		.dataA(dataA),
-		.dataB(dataB)
+		.dataB(dataB),
+		.progBank(progBank),
+		.dataBank(dataBank)
 	);
 endmodule

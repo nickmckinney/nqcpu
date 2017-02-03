@@ -1,15 +1,23 @@
+/*
+ * 0-7: general purpose registers
+ * 8: {program bank, data bank}
+ */
+
 module regFile (
 	input clk,
 	input [2:0] regA,
 	input [2:0] regB,
-	input [2:0] regDest,
+	input [3:0] regDest,
 	input [15:0] dataIn,
 	input we,
 	input hb,
 	input lb,
 	output [15:0] dataA,
 	output [15:0] dataB,
-	
+
+	output [7:0] progBank,
+	output [7:0] dataBank,
+
 	output [15:0] dbg_r0,
 	output [15:0] dbg_r1,
 	output [15:0] dbg_r2,
@@ -20,20 +28,18 @@ module regFile (
 	output [15:0] dbg_r7
 );
 
-	reg [15:0] register[8];
+	reg [15:0] register[16];
 	
 	assign dataA = register[regA];
 	assign dataB = register[regB];
-	
+
+	assign progBank = register[8][15:8];
+	assign dataBank = register[8][7:0];
+
 	initial begin
-		register[0] = 16'h0;
-		register[1] = 16'h0;
-		register[2] = 16'h0;
-		register[3] = 16'h0;
-		register[4] = 16'h0;
-		register[5] = 16'h0;
-		register[6] = 16'h0;
-		register[7] = 16'h0;
+		for(int i = 0; i < 16; i++) begin
+			register[i] = 16'h0;
+		end
 	end
 	
 	always @(posedge clk) begin
