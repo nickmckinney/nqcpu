@@ -40,13 +40,13 @@ module nqcpu (
 
 	wire fetch_re;
 	wire [15:0] fetched_instr;
-	wire [15:0] pc_from_fetch;
+	wire [23:0] pc_from_fetch;
 	wire [15:0] fetch_addr;
 	fetch_stage fetch_inst (
 		.clk(clk),
 		.en(fetch_en),
 
-		.addr_in(pc),
+		.addr_in({rf_progBank, pc}),
 		.mem_re(fetch_re),
 		.mem_addr(fetch_addr),
 		.mem_data(data_i),
@@ -54,7 +54,7 @@ module nqcpu (
 		.pc_out(pc_from_fetch)
 	);
 
-	wire [15:0] mc_mem_addr;
+	wire [23:0] mc_mem_addr;
 	wire mc_mem_re, mc_mem_we;
 	wire [15:0] mc_mem_dataOut;
 
@@ -90,7 +90,7 @@ module nqcpu (
 
 	decoder_signals ctrl_from_decoder;
 	wire [15:0] imm_from_decoder;
-	wire [15:0] pc_from_decoder;
+	wire [23:0] pc_from_decoder;
 
 	decoder_stage decoder_inst (
 		.clk(clk),
@@ -139,7 +139,7 @@ module nqcpu (
 
 	alu_signals ctrl_from_alu;
 	wire [15:0] imm_from_alu;
-	wire [15:0] pc_from_alu;
+	wire [23:0] pc_from_alu;
 	wire mem_op_next;
 	alu_stage alu_inst (
 		.clk(clk),
@@ -153,6 +153,7 @@ module nqcpu (
 		.rf_regB(rf_regB),
 		.rf_dataA(rf_dataA),
 		.rf_dataB(rf_dataB),
+		.rf_dataBank(rf_dataBank),
 
 		.mem_op_next(mem_op_next),
 		.control_signals_out(ctrl_from_alu),

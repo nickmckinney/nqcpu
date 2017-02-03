@@ -15,7 +15,7 @@ module mem_stage (
 
 	assign mem_re_o = en & ctrl_i.mem_read[0];
 	assign mem_we_o = en & ctrl_i.mem_write[0];
-	assign mem_addr_o = {8'h0, ctrl_i.mem_addr};  // TODO: data bank needs to be used instead, added to alu_signals
+	assign mem_addr_o = ctrl_i.mem_addr;
 	assign mem_data_o = ctrl_i.data_out;
 	
 	// if address is odd, then the byte being read in is the LSB (big-endian), otherwise MSB

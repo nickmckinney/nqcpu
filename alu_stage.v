@@ -5,13 +5,13 @@ typedef struct packed {
 	logic setPC;            // write data_out to PC
 	logic [1:0] mem_read;   // {1 = word;0 = byte, 1 = read}
 	logic [1:0] mem_write;  // {1 = word;0 = byte, 1 = write}
-	logic [15:0] mem_addr;  // address of memory read/write
+	logic [23:0] mem_addr;  // address of memory read/write
 } alu_signals;
 
 module alu_stage (
 	input clk,
 	input en,
-	input [15:0] pc_in,
+	input [23:0] pc_in,
 	input decoder_signals control_signals_in,
 	input [15:0] imm_in,
 
@@ -21,13 +21,14 @@ module alu_stage (
 	output [15:0] rf_dataIn,
 	input [15:0] rf_dataA,
 	input [15:0] rf_dataB,
+	input [7:0] rf_dataBank,
 	
 	// outgoing control signals
 	output mem_op_next,           // 1 = memory read or write is needed (not a register; needs to be available sooner so control unit can go to mem state)
 	output alu_signals control_signals_out,
 
 	output reg [15:0] imm_out,
-	output reg [15:0] pc_out,
+	output reg [23:0] pc_out,
 
 	output [1:0] dbg_statusreg
 );
@@ -36,12 +37,12 @@ module alu_stage (
 	wire [15:0] aluSrc1;
 	assign aluSrc1 =
 		control_signals_in.aluOpSource1 == 2'h0 ? rf_dataA :
-		control_signals_in.aluOpSource1 == 2'h2 ? {imm_in} : pc_in;
+		control_signals_in.aluOpSource1 == 2'h2 ? {imm_in} : pc_in[15:0];
 		
 	wire [15:0] aluSrc2;
 	assign aluSrc2 =
 		control_signals_in.aluOpSource2 == 2'h0 ? rf_dataB :
-		control_signals_in.aluOpSource2 == 2'h1 ? ~rf_dataIn : pc_in;
+		control_signals_in.aluOpSource2 == 2'h1 ? ~rf_dataIn : pc_in[15:0];
 
 	wire [15:0] aluResult;
 	wire aluZero, aluCarry;
@@ -82,7 +83,10 @@ module alu_stage (
 			                                 control_signals_in.memReadW ? 2'b11 : 2'b00;
 			control_signals_out.mem_write <= control_signals_in.memWriteB ? 2'b01 :
 			                                 control_signals_in.memWriteW ? 2'b11 : 2'b00;
-			control_signals_out.mem_addr  <= (control_signals_in.memWriteB | control_signals_in.memWriteW) ? rf_dataB : rf_dataA;
+			control_signals_out.mem_addr  <= {
+			                                  rf_dataBank,
+														 (control_signals_in.memWriteB | control_signals_in.memWriteW) ? rf_dataB : rf_dataA
+														};
 
 			imm_out <= imm_in;
 			pc_out <= pc_in;

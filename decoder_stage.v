@@ -3,11 +3,11 @@ module decoder_stage (
 	input en,
 
 	input [15:0] instr_in,
-	input [15:0] pc_in,
+	input [23:0] pc_in,
 	
 	output decoder_signals control_signals_out,
 	output reg [15:0] imm_out,
-	output reg [15:0] pc_out
+	output reg [23:0] pc_out
 );
 
 	wire [15:0] imm_next;
