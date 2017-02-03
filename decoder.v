@@ -133,6 +133,11 @@ module decoder (
 //  0111 + 0000 + [reg1] + 00000
 //    basically moves reg1 to pc
 
+// jmpfar (NOT YET IMPLEMENTED)
+//  0111 + 0001 + [reg1] + [reg2] + 00
+//    pb <- low byte of reg2
+//    pc <- reg1
+
 // sdb
 //  1001 + 000 + 0 + [reg1] + 00000
 //  1001 + 000 + 1 + [immediate value]
