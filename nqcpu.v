@@ -3,7 +3,7 @@ module nqcpu (
 	
 	input needWait_i,
 	
-	output [15:0] addr_o,
+	output [23:0] addr_o,
 	output re_o, we_o,
 	inout [15:0] data_io,
 

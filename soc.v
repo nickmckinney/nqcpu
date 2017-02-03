@@ -39,14 +39,14 @@ module soc (
 	
 	output dbg_re_o,
 	output dbg_we_o,
-	output [15:0] dbg_addr_o,
+	output [23:0] dbg_addr_o,
 	output [15:0] dbg_data_io,
 
 	output [$bits(alu_signals)-1:0] dbg_ctrl_alu
 );
 
 	wire needWait_i;
-	wire [15:0] addr_o;
+	wire [23:0] addr_o;
 	wire re_o, we_o;
 	wire [15:0] data_io;
 	decoder_signals ctrl_from_decoder;

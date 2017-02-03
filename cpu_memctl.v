@@ -1,10 +1,10 @@
 module cpu_memctl (
 	input fetch_en,
-	input [15:0] fetch_addr,
+	input [23:0] fetch_addr,
 	input fetch_re,
 
 	input mem_en,
-	input [15:0] mem_addr,
+	input [23:0] mem_addr,
 	input mem_re,
 	input mem_we,
 	input [15:0] mem_dataOut,
@@ -12,7 +12,7 @@ module cpu_memctl (
 	output needWait_o,
 	output [15:0] dataRead,
 
-	output [15:0] addr_o,
+	output [23:0] addr_o,
 	output re_o, we_o,
 	inout [15:0] data_io,
 	input needWait_i

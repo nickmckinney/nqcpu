@@ -4,7 +4,7 @@ module fetch_stage (
 
 	input [15:0] addr_in,
 	output mem_re,
-	output [15:0] mem_addr,
+	output [23:0] mem_addr,
 	input [15:0] mem_data,
 	
 	output reg [15:0] instr_out,
@@ -20,6 +20,6 @@ module fetch_stage (
 		end
 	end
 	
-	assign mem_addr = addr_in;
+	assign mem_addr = {8'h0, addr_in};  // TODO: use program bank number instead
 
 endmodule
