@@ -39,10 +39,11 @@ module testROM (
 				15'h0d: romData <= 16'h0004;
 				15'h0e: romData <= 16'h0809;
 				15'h0f: romData <= 16'h6afa;
-				15'h10: romData <= 16'h0dda;
-				15'h11: romData <= 16'h5d02;
+				15'h10: romData <= 16'h9148;
+				15'h11: romData <= 16'h0dda;
 				15'h12: romData <= 16'h41ba;
 				15'h13: romData <= 16'h6e00;
+				15'h14: romData <= 16'hf000;
 
 				15'h80: romData <= 16'h1001;
 
