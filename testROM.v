@@ -2,7 +2,7 @@ module testROM (
 	input clk,
 	
 	output needWait_o,
-	input [15:0] addr_i,
+	input [20:0] addr_i,
 	input re_i,
 	inout [15:0] data_io
 );

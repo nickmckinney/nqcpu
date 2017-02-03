@@ -77,12 +77,57 @@ module soc (
 		.ctrl_alu_o(dbg_ctrl_alu)
 	);
 
+	logic re_dram, re_sram, re_leds;
+	wire [15:0] dram_data;
+	wire [15:0] sram_data;
+	wire [15:0] led_data;
+
+	assign dram_data = re_dram ? 16'b0 : 16'bZ;
+	assign sram_data = re_sram ? 16'b0 : 16'bZ;
+	assign led_data = re_leds ? 16'b0 : 16'bZ;
+	ext_memInterface ext_memInterface_inst (
+		.clk(clk),
+
+		.addr_i(addr_o),
+		.data_io_cpu(data_io),
+		.re_i(re_o),
+		.we_i(we_o),
+		.needWait_o(needWait_i),
+
+		.addr_o_flash(testROM_addr),
+		.data_i_flash(testROM_data),
+		.re_o_flash(testROM_re),
+		.needWait_i_flash(testROM_needWait),
+
+		//.addr_o_dram,
+		.data_io_dram(dram_data),
+		.re_o_dram(re_dram),
+		//.we_o_dram,
+		.needWait_i_dram(1'b0),
+
+		//.addr_o_sram,
+		.data_io_sram(sram_data),
+		.re_o_sram(re_sram),
+		//.we_o_sram,
+		.needWait_i_sram(1'b0),
+
+		//.addr_o_leds,
+		.data_io_leds(led_data),
+		.re_o_leds(re_leds),
+		//.we_o_leds,
+		.needWait_i_leds(1'b0)
+	);
+
+	logic [20:0] testROM_addr;
+	logic testROM_re;
+	wire [15:0] testROM_data;
+	logic testROM_needWait;
 	testROM testROM_inst (
 		.clk(clk),
-		.needWait_o(needWait_i),
-		.addr_i(addr_o),
-		.re_i(re_o),
-		.data_io(data_io)
+		.needWait_o(testROM_needWait),
+		.addr_i(testROM_addr),
+		.re_i(testROM_re),
+		.data_io(testROM_data)
 	);
 
 	assign debugAluOp = ctrl_from_decoder.aluOp;
