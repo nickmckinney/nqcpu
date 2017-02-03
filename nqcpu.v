@@ -18,6 +18,7 @@ module nqcpu (
 	output [15:0] dbg_r5,
 	output [15:0] dbg_r6,
 	output [15:0] dbg_r7,
+	output [7:0] dbg_db,
 	
 	output dbg_setPC,
 	output [15:0] dbg_setPCValue,
@@ -110,6 +111,8 @@ module nqcpu (
 	wire rf_lb;
 	wire [15:0] rf_dataA;
 	wire [15:0] rf_dataB;
+	wire [7:0] rf_progBank;
+	wire [7:0] rf_dataBank;
 	regFile regFile_inst (
 		.clk(clk),
 		.regA(rf_regA),
@@ -121,6 +124,8 @@ module nqcpu (
 		.lb(rf_lb),
 		.dataA(rf_dataA),
 		.dataB(rf_dataB),
+		.progBank(rf_progBank),
+		.dataBank(rf_dataBank),
 
 		.dbg_r0(dbg_r0),
 		.dbg_r1(dbg_r1),
@@ -212,4 +217,5 @@ module nqcpu (
 	assign dbg_setPC = setPC;
 	assign dbg_setPCValue = setPCValue;
 	assign ctrl_alu_o = ctrl_from_alu;
+	assign dbg_db = rf_dataBank;
 endmodule

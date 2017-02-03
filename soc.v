@@ -41,6 +41,7 @@ module soc (
 	output dbg_we_o,
 	output [23:0] dbg_addr_o,
 	output [15:0] dbg_data_io,
+	output [7:0] dbg_db,
 
 	output [$bits(alu_signals)-1:0] dbg_ctrl_alu
 );
@@ -70,6 +71,7 @@ module soc (
 		.dbg_r6(dbg_r6),
 		.dbg_r7(dbg_r7),
 		.dbg_state(dbg_state),
+		.dbg_db(dbg_db),
 		//.dbg_setPC(dbg_setPC),
 		//.dbg_setPCValue(dbg_setPCValue),
 		.dbg_statusreg(dbg_statusreg),

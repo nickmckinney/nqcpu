@@ -60,6 +60,7 @@ module decoder (
 //  mov (reg0 <- reg1, *reg0 <- reg1, reg0 <- *reg1, imm8 -> reg0H, imm8 -> reg0L)
 //  b** (relative branch: ne, eq, gt, lt, ge, le, always)
 //  jmp (absolute branch)
+//  spb/sdb (set program bank/data bank) (pb <- reg1, db <- reg1, pb <- imm8, db <- imm8)
 
 // WISH LIST:
 //  inc/dec for adding 1 and -1 in one instruction
@@ -132,22 +133,28 @@ module decoder (
 //  0111 + 00000 + [reg1] + 00000
 //    basically moves reg1 to pc
 
+// sdb
+//  1001 + 000 + 0 + [reg1] + 00000
+//  1001 + 000 + 1 + [immediate value]
+
 // nop
 //  1111 + xxxx xxxx xxxx
 
 	// instruction decode
 	wire [3:0] which_instr = instr[15:12];
-	wire instr_math, instr_shift, instr_notneg, instr_bts, instr_mov, instr_movimm, instr_branch, instr_jmp, instr_addpc, instr_nop;
-	assign {instr_math, instr_shift, instr_notneg, instr_bts, instr_mov, instr_movimm, instr_branch, instr_jmp, instr_addpc, instr_nop} =
-		which_instr == 4'h0 ? 10'b1000000000 :
-		which_instr == 4'h1 ? 10'b0100000000 :
-		which_instr == 4'h2 ? 10'b0010000000 :
-		which_instr == 4'h3 ? 10'b0001000000 :
-		which_instr == 4'h4 ? 10'b0000100000 :
-		which_instr == 4'h5 ? 10'b0000010000 :
-		which_instr == 4'h6 ? 10'b0000001000 :
-		which_instr == 4'h7 ? 10'b0000000100 : 
-		which_instr == 4'h8 ? 10'b0000000010 : 10'b0000000001;
+	wire instr_math, instr_shift, instr_notneg, instr_bts, instr_mov, instr_movimm, instr_branch, instr_jmp, instr_addpc, instr_setbank, instr_nop;
+	assign {instr_math, instr_shift, instr_notneg, instr_bts, instr_mov, instr_movimm, instr_branch, instr_jmp, instr_addpc, instr_setbank, instr_nop} =
+		which_instr == 4'h0 ? 11'b10000000000 :
+		which_instr == 4'h1 ? 11'b01000000000 :
+		which_instr == 4'h2 ? 11'b00100000000 :
+		which_instr == 4'h3 ? 11'b00010000000 :
+		which_instr == 4'h4 ? 11'b00001000000 :
+		which_instr == 4'h5 ? 11'b00000100000 :
+		which_instr == 4'h6 ? 11'b00000010000 :
+		which_instr == 4'h7 ? 11'b00000001000 :
+		which_instr == 4'h8 ? 11'b00000000100 :
+		which_instr == 4'h9 ? 11'b00000000010 :
+		                      11'b00000000001;
 
 	// src/dest registers
 	wire [2:0] reg0 = instr[11:9];
@@ -189,23 +196,28 @@ module decoder (
 		branch_cond == 3'h5 ? 6'b1_01_0_01 :		// LE
 			6'b1_10_0_10;
 
+	// for instr_setbank
+	wire set_bank_imm = instr[8];
+
 	assign signals_out.aluOp =
-		instr_math ? {1'b0, math_op} :
-		instr_shift ? {1'b1, shift_dir, shift_extend} :
-		instr_notneg ? ALU_ADD :
-		instr_mov ? ALU_JUSTX :
-		instr_movimm ? ALU_JUSTX :
-			ALU_ADD;
+		instr_math    ? {1'b0, math_op} :
+		instr_shift   ? {1'b1, shift_dir, shift_extend} :
+		instr_notneg  ? ALU_ADD :
+		instr_mov     ? ALU_JUSTX :
+		instr_movimm  ? ALU_JUSTX :
+		instr_setbank ? ALU_JUSTX :
+		                ALU_ADD;
 
 	assign signals_out.aluReg1 = reg1;
 	assign signals_out.aluReg2 = reg2;
 
 	assign signals_out.aluOpSource1 =
-		instr_mov ? ((mov_mem & mov_mem_read) ? 2'h1 : 2'h0) :
-		instr_notneg ? 2'h2 :
-		instr_movimm ? 2'h2 :
-		instr_branch ? 2'h2 :
-			2'h0;
+		instr_mov     ? ((mov_mem & mov_mem_read) ? 2'h1 : 2'h0) :
+		instr_notneg  ? 2'h2 :
+		instr_movimm  ? 2'h2 :
+		instr_branch  ? 2'h2 :
+		instr_setbank ? (set_bank_imm ? 2'h2 : 2'h0) :
+		                2'h0;
 
 	assign signals_out.aluOpSource2 =
 		instr_notneg ? 2'h1 :
@@ -217,11 +229,12 @@ module decoder (
 		instr_jmp ? 1'b1 :
 			1'b0;
 
-	assign signals_out.regDest = {1'b0, reg0};
+	assign signals_out.regDest = instr_setbank ? 4'h8 : {1'b0, reg0};
 	
 	assign signals_out.regSetH =
 		instr_mov ? (mov_word | mov_dest_byte_high) :
 		instr_movimm ? movimm_high :
+		instr_setbank ? 1'b0 :
 			1'b1;
 
 	assign signals_out.regSetL =
@@ -242,9 +255,10 @@ module decoder (
 			6'b1_10_0_10;
 
 	assign imm =
-		instr_notneg ? {15'b0, notneg_is_neg} :
-		instr_branch ? ext_imm_param :
-		instr_addpc ? ext_imm_param :
+		instr_notneg                 ? {15'b0, notneg_is_neg} :
+		instr_branch                 ? ext_imm_param :
+		instr_addpc                  ? ext_imm_param :
+		instr_setbank & set_bank_imm ? {8'h0, imm_param} :
 			{movimm_imm, movimm_imm};
 
 endmodule
