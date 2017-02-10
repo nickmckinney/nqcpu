@@ -39,10 +39,10 @@ module ext_memInterface (
 
 	logic flashSel, sramSel, dramSel, ledSel;
 	
-	assign flashSel = addr_i[23:22] == 2'b00;
 	assign dramSel  = addr_i[23];
-	assign sramSel  = addr_i[23:21] == 2'b010;
-	assign ledSel   = addr_i[23:21] == 2'b011;
+	assign flashSel = addr_i[23:22] == 2'b00;
+	assign sramSel  = addr_i[23:19] == 5'b0100_0;
+	assign ledSel   = addr_i[23:19] == 5'b0100_1;
 	
 	assign addr_o_flash = addr_i[20:0];
 	assign addr_o_dram  = addr_i[21:0];
