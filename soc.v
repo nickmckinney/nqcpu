@@ -1,6 +1,11 @@
 module soc (
 	input clk,
 
+	output [6:0] hex_0,
+	output [6:0] hex_1,
+	output [6:0] hex_2,
+	output [6:0] hex_3,
+
 	//output [15:0] debugPC,
 	output [3:0] debugAluOp,
 	output [2:0] debugAluReg1,
@@ -79,14 +84,12 @@ module soc (
 		.ctrl_alu_o(dbg_ctrl_alu)
 	);
 
-	logic re_dram, re_sram, re_leds;
+	logic re_dram, re_sram;
 	wire [15:0] dram_data;
 	wire [15:0] sram_data;
-	wire [15:0] led_data;
 
 	assign dram_data = re_dram ? 16'b0 : 16'bZ;
 	assign sram_data = re_sram ? 16'b0 : 16'bZ;
-	assign led_data = re_leds ? 16'b0 : 16'bZ;
 	ext_memInterface ext_memInterface_inst (
 		.clk(clk),
 
@@ -113,11 +116,11 @@ module soc (
 		//.we_o_sram,
 		.needWait_i_sram(1'b0),
 
-		//.addr_o_leds,
-		.data_io_leds(led_data),
-		.re_o_leds(re_leds),
-		//.we_o_leds,
-		.needWait_i_leds(1'b0)
+		.addr_o_leds(leds_addr),
+		.data_io_leds(leds_data),
+		.re_o_leds(leds_re),
+		.we_o_leds(leds_we),
+		.needWait_i_leds(leds_needWait)
 	);
 
 	logic [20:0] testROM_addr;
@@ -132,6 +135,8 @@ module soc (
 		.data_io(testROM_data)
 	);
 
+	wire [15:0] leds_data;
+	wire leds_re, leds_we, leds_addr, leds_needWait;
 	assign debugAluOp = ctrl_from_decoder.aluOp;
 	assign debugAluReg1 = ctrl_from_decoder.aluReg1;
 	assign debugAluReg2 = ctrl_from_decoder.aluReg2;
@@ -153,4 +158,18 @@ module soc (
 	assign dbg_we_o = we_o;
 	assign dbg_addr_o = addr_o;
 	assign dbg_data_io = data_io;
+	test_led_ram test_leds (
+		.clk(clk),
+
+		.needWait_o(leds_needWait),
+		.addr_i(leds_addr),
+		.re_i(leds_re),
+		.we_i(leds_we),
+		.data_io(leds_data),
+
+		.hex_0(hex_0),
+		.hex_1(hex_1),
+		.hex_2(hex_2),
+		.hex_3(hex_3)
+	);
 endmodule
