@@ -6,7 +6,7 @@ module soc (
 	output [6:0] hex_0,
 	output [6:0] hex_1,
 	output [6:0] hex_2,
-	output [6:0] hex_3,
+	output [6:0] hex_3
 
 	//output [15:0] debugPC,
 	//output [3:0] debugAluOp,
