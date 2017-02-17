@@ -76,4 +76,34 @@ set_global_assignment -name VERILOG_SHOW_LMF_MAPPING_MESSAGES OFF
 set_global_assignment -name SYSTEMVERILOG_FILE ext_memInterface.sv
 set_global_assignment -name SYSTEMVERILOG_FILE test_led_ram.sv
 set_global_assignment -name SYSTEMVERILOG_FILE driver_7seg.sv
+set_global_assignment -name STRATIX_DEVICE_IO_STANDARD "3.3-V LVTTL"
+set_location_assignment PIN_E2 -to hex_0[6]
+set_location_assignment PIN_F1 -to hex_0[5]
+set_location_assignment PIN_F2 -to hex_0[4]
+set_location_assignment PIN_H1 -to hex_0[3]
+set_location_assignment PIN_H2 -to hex_0[2]
+set_location_assignment PIN_J1 -to hex_0[1]
+set_location_assignment PIN_J2 -to hex_0[0]
+set_location_assignment PIN_D1 -to hex_1[6]
+set_location_assignment PIN_D2 -to hex_1[5]
+set_location_assignment PIN_G3 -to hex_1[4]
+set_location_assignment PIN_H4 -to hex_1[3]
+set_location_assignment PIN_H5 -to hex_1[2]
+set_location_assignment PIN_H6 -to hex_1[1]
+set_location_assignment PIN_E1 -to hex_1[0]
+set_location_assignment PIN_D3 -to hex_2[6]
+set_location_assignment PIN_E4 -to hex_2[5]
+set_location_assignment PIN_E3 -to hex_2[4]
+set_location_assignment PIN_C1 -to hex_2[3]
+set_location_assignment PIN_C2 -to hex_2[2]
+set_location_assignment PIN_G6 -to hex_2[1]
+set_location_assignment PIN_G5 -to hex_2[0]
+set_location_assignment PIN_D4 -to hex_3[6]
+set_location_assignment PIN_F3 -to hex_3[5]
+set_location_assignment PIN_L8 -to hex_3[4]
+set_location_assignment PIN_J4 -to hex_3[3]
+set_location_assignment PIN_D6 -to hex_3[2]
+set_location_assignment PIN_D5 -to hex_3[1]
+set_location_assignment PIN_F4 -to hex_3[0]
+set_location_assignment PIN_D12 -to clkIn
 set_instance_assignment -name PARTITION_HIERARCHY root_partition -to | -section_id Top
