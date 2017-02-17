@@ -1,5 +1,7 @@
+// `define SLOW_CLOCK
+
 module soc (
-	input clk,
+	input clkIn,
 
 	output [6:0] hex_0,
 	output [6:0] hex_1,
@@ -50,6 +52,20 @@ module soc (
 
 	output [$bits(alu_signals)-1:0] dbg_ctrl_alu
 );
+
+`ifdef SLOW_CLOCK
+	reg clk;
+	reg [19:0] clkCount;
+
+	always @(posedge clkIn) begin
+		clkCount <= clkCount + 20'h1;
+		if(clkCount == 0) clk <= ~clk;
+	end
+`else
+	wire clk;
+	
+	assign clk = clkIn;
+`endif
 
 	wire needWait_i;
 	wire [23:0] addr_o;
