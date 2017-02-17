@@ -3,6 +3,8 @@
 module soc (
 	input clkIn,
 
+	input switch,
+
 	output [6:0] hex_0,
 	output [6:0] hex_1,
 	output [6:0] hex_2,
@@ -153,6 +155,10 @@ module soc (
 
 	wire [15:0] leds_data;
 	wire leds_re, leds_we, leds_addr, leds_needWait;
+	wire [6:0] hex0_leds;
+	wire [6:0] hex1_leds;
+	wire [6:0] hex2_leds;
+	wire [6:0] hex3_leds;
 	test_led_ram test_leds (
 		.clk(clk),
 
@@ -162,11 +168,41 @@ module soc (
 		.we_i(leds_we),
 		.data_io(leds_data),
 
-		.hex_0(hex_0),
-		.hex_1(hex_1),
-		.hex_2(hex_2),
-		.hex_3(hex_3)
+		.hex_0(hex0_leds),
+		.hex_1(hex1_leds),
+		.hex_2(hex2_leds),
+		.hex_3(hex3_leds)
 	);
+
+	wire [15:0] debugLEDOutput;
+	assign debugLEDOutput = 16'hBEEF;
+
+	wire [6:0] hex0_pc;
+	wire [6:0] hex1_pc;
+	wire [6:0] hex2_pc;
+	wire [6:0] hex3_pc;
+	driver_7seg foo (
+		.binary(debugLEDOutput[3:0]),
+		.leds(hex0_pc)
+	);
+	driver_7seg fooa (
+		.binary(debugLEDOutput[7:4]),
+		.leds(hex1_pc)
+	);
+	driver_7seg foob (
+		.binary(debugLEDOutput[11:8]),
+		.leds(hex2_pc)
+	);
+	driver_7seg fooc (
+		.binary(debugLEDOutput[15:12]),
+		.leds(hex3_pc)
+	);
+
+	assign hex_0 = switch ? hex0_leds : hex0_pc;
+	assign hex_1 = switch ? hex1_leds : hex1_pc;
+	assign hex_2 = switch ? hex2_leds : hex2_pc;
+	assign hex_3 = switch ? hex3_leds : hex3_pc;
+
 	//assign debugAluOp = ctrl_from_decoder.aluOp;
 	//assign debugAluReg1 = ctrl_from_decoder.aluReg1;
 	//assign debugAluReg2 = ctrl_from_decoder.aluReg2;
